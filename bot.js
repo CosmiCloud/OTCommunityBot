@@ -109,7 +109,7 @@ bot.command('dotjobs', (ctx) => ctx.reply(
 ));
 
 //Easter Eggs
-bot.command('npmsetup', (ctx) => ctx.reply(
+bot.command('npmrunsetup', (ctx) => ctx.reply(
   'Erasing system.db...'
 ));
 
