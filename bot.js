@@ -195,15 +195,6 @@ module.exports={
       }catch(e){
         return'I wasnt able to find the jobs... Lets blame Calvin!';
       }
-    },
-  dh_info: async function dh_info(){
-      try {
-        var locked = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.Blockchains[0].TokensLocked24H' "
-        var locked = await exec(locked);
-        return locked.stdout;
-      }catch(e){
-        return'I wasnt able to find the jobs... Lets blame Calvin!';
-      }
     }
 }
 
