@@ -238,7 +238,6 @@ bot.command('bothelp', ctx => {
     )
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -252,7 +251,6 @@ bot.command('nodehelp', ctx => {
     )
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -264,7 +262,6 @@ bot.command('backup', ctx => {
     )
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -280,7 +277,6 @@ bot.command('freespace', ctx => {
     )
   }catch(e){
     console.log(e)
-    ctx.reply('I dont feel so good...')
   }
 });
 
@@ -293,7 +289,6 @@ bot.command('dockerless', ctx => {
     )
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -306,7 +301,6 @@ bot.command('multinode', ctx => {
     )
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 //---------------------------------END HELP COMMANDS--------------------------
@@ -317,7 +311,6 @@ bot.command('/mynodeid', ctx => {
     return ctx.reply('Your node ID is '+ctx.session.node_id+'.')
   }catch(e){
     console.log(e)
-    return ctx.reply('I wasnt able to find your node ID.')
   }
 });
 
@@ -328,7 +321,6 @@ bot.command('/setnodeid', ctx => {
     return ctx.reply('What is your node ID?')
   }catch(e){
     console.log(e)
-    return ctx.reply('Im not accepting any new IDs right now.')
   }
 });
 
@@ -365,7 +357,6 @@ bot.command('/mynodestats', async (ctx) => {
     );
   }catch(e){
     console.log(e)
-    ctx.reply('I wasnt able to retrieve your node stats.')
   }
 });
 //-----------------END MY NODE COMMANDS---------------------------------------
@@ -379,7 +370,6 @@ bot.command('activejobs', async (ctx) => {
     await ctx.reply('There are '+tjobs+' active jobs.')
   }catch(e){
     console.log(e)
-    return ctx.reply('I wasnt able to retrieve active jobs.')
   }
 });
 
@@ -390,7 +380,6 @@ bot.command('jobs', async (ctx) => {
     await ctx.reply('There have been '+jobs+' jobs in the past 24 hours.')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -401,7 +390,6 @@ bot.command('ethjobs', async (ctx) => {
     await ctx.reply('There have been '+jobs+' ethereum jobs in the past 24 hours.')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -412,7 +400,6 @@ bot.command('xdaijobs', async (ctx) => {
     await ctx.reply('There have been '+jobs+' xdai jobs in the past 24 hours.')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -423,7 +410,6 @@ bot.command('polyjobs', async (ctx) => {
     await ctx.reply('There have been '+jobs+' polygon jobs in the past 24 hours.')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -432,7 +418,6 @@ bot.command('dotjobs', async (ctx) => {
     return ctx.reply('You have just delayed the Polkadot integration by 3 weeks.')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 //---------------------------------END JOB COMMANDS-------------------------
@@ -445,7 +430,6 @@ bot.command('nodes', async (ctx) => {
     await ctx.reply('There are '+tnodes+' active nodes(identities) on the ODN. ')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -456,7 +440,6 @@ bot.command('ethnodes', async (ctx) => {
     await ctx.reply('There are '+tnodes+' active eth nodes(identities) on the ODN. ')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -467,7 +450,6 @@ bot.command('xdainodes', async (ctx) => {
     await ctx.reply('There are '+tnodes+' active xdai nodes(identities) on the ODN. ')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -478,7 +460,6 @@ bot.command('polynodes', async (ctx) => {
     await ctx.reply('There are '+tnodes+' active polygon nodes(identities) on the ODN. ')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 //---------------------------------END NODES COMMANDS-----------------------
@@ -492,7 +473,6 @@ bot.command('payouts', async (ctx) => {
     await ctx.reply('There has been '+pay_num+' TRAC paidout in the last 24 hours. ')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -504,7 +484,6 @@ bot.command('ethpayouts', async (ctx) => {
     await ctx.reply('There has been '+pay_num+' ethTRAC paidout in the last 24 hours. ')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -516,7 +495,6 @@ bot.command('xdaipayouts', async (ctx) => {
     await ctx.reply('There has been '+pay_num+' xTRAC paidout in the last 24 hours. ')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -528,7 +506,6 @@ bot.command('polypayouts', async (ctx) => {
     await ctx.reply('There has been '+pay_num+' polyTRAC paidout in the last 24 hours. ')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 //---------------------------------END PAYOUT COMMANDS----------------------
@@ -542,7 +519,6 @@ bot.command('staked', async (ctx) => {
     await ctx.reply('There is '+staked_num+' TRAC staked on the ODN. ')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -554,7 +530,6 @@ bot.command('ethstaked', async (ctx) => {
     await ctx.reply('There is '+staked_num+' ethTRAC staked on the ODN. ')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -566,7 +541,6 @@ bot.command('xdaistaked', async (ctx) => {
     await ctx.reply('There is '+staked_num+' xTRAC staked on the ODN. ')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -578,7 +552,6 @@ bot.command('polystaked', async (ctx) => {
     await ctx.reply('There is '+staked_num+' polyTRAC staked on the ODN. ')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 //---------------------------------END STAKED COMMANDS----------------------
@@ -592,7 +565,6 @@ bot.command('locked', async (ctx) => {
     await ctx.reply('There has been '+locked_num+' TRAC locked into jobs in the past 24 hours.')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -604,7 +576,6 @@ bot.command('ethlocked', async (ctx) => {
     await ctx.reply('There has been '+locked_num+' ethTRAC locked into jobs in the past 24 hours.')
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -639,7 +610,6 @@ bot.command('watsurid', ctx => {
     )
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -650,7 +620,6 @@ bot.command('npmrunsetup', ctx => {
     )
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -661,7 +630,6 @@ bot.command('doiknowu', ctx => {
     )
   }catch(e){
     console.log(e)
-    return ctx.reply('I dont feel so good...')
   }
 });
 
@@ -680,7 +648,6 @@ bot.on('text', ctx => {
     ctx.session.step = undefined
   }catch(e){
     console.log(e)
-    ctx.reply('I wasnt able to do this for you. What are you?..')
   }
 });
 
