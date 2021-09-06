@@ -2,8 +2,9 @@ require('dotenv').config();
 const os = require('os');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
-const { Telegraf } = require('telegraf');
+const { Telegraf, session, Scenes, Markup, BaseScene, Stage } = require('telegraf');
 const bot = new Telegraf(process.env.BOT_TOKEN);
+bot.use(session())
 
 module.exports={
     activejobs: async function jobs(){
@@ -194,18 +195,27 @@ module.exports={
       }catch(e){
         return'I wasnt able to find the jobs... Lets blame Calvin!';
       }
+    },
+  dh_info: async function dh_info(){
+      try {
+        var locked = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.Blockchains[0].TokensLocked24H' "
+        var locked = await exec(locked);
+        return locked.stdout;
+      }catch(e){
+        return'I wasnt able to find the jobs... Lets blame Calvin!';
+      }
     }
 }
 
 //Bot Commands
 bot.command('bothelp', (ctx) => ctx.reply(
   'b-OT Commands:'+os.EOL+
+  '/setnodeid'+os.EOL+
   '/nodehelp'+os.EOL+
   '/backup'+os.EOL+
   '/freespace'+os.EOL+
   '/dockerless'+os.EOL+
   '/multinode'+os.EOL+
-  '/activejobs'+os.EOL+
   '/jobs'+os.EOL+
   '/nodes'+os.EOL+
   '/staked'+os.EOL+
@@ -247,7 +257,63 @@ bot.command('multinode', (ctx) => ctx.reply(
   'Thanks Calvin and BRX!'
 ));
 //---------------------------------END HELP COMMANDS--------------------------
+//----------------START MY NODE COMMANDS--------------------------------------
+bot.command('/mynodeid', ctx => {
+  return ctx.reply('Your node ID is '+ctx.session.node_id+'.')
+});
 
+bot.command('/setnodeid', ctx => {
+  if(!ctx.session.step) ctx.session = {}
+  ctx.session.step = 'node_id'
+  return ctx.reply('What is your node ID?')
+});
+
+bot.command('/mynodestats', async (ctx) => {
+  var dh_info = "sudo curl -s https://v5api.othub.info/api/nodes/DataHolder/"+ctx.session.node_id
+  var dh_info = await exec(dh_info);
+  var dh_info = JSON.parse(dh_info.stdout);
+  var blockchains = ''
+  var chain_count  = Object.keys(dh_info.Identities).length;
+
+    for(var i = 0; i < chain_count; i++) {
+      var obj = Object.entries(dh_info.Identities)[i];
+      var obj = obj[1];
+      var blockchains = blockchains+obj.BlockchainName+' '
+    }
+
+    var total_jobs = parseInt(dh_info.TotalWonOffers);
+    var active_jobs = parseInt(dh_info.TotalActiveOffers);
+    var staked_tokens = parseInt(dh_info.StakeTokens);
+    var locked_tokens = parseInt(dh_info.StakeReservedTokens);
+    var paidout_tokens = parseInt(dh_info.PaidTokens);
+    var total_litigations = parseInt(dh_info.LitigationCount);
+
+  return ctx.replyWithMarkdownV2(
+    '*Stats for Node:* '+ctx.session.node_id+os.EOL+
+    '*Blockchains:* '+blockchains+os.EOL+
+    '*Total Jobs:* '+total_jobs+os.EOL+
+    '*Active Jobs:* '+active_jobs+os.EOL+
+    '*Staked Tokens:* '+staked_tokens+os.EOL+
+    '*Locked Tokens:* '+locked_tokens+os.EOL+
+    '*Paidout Tokens:* '+paidout_tokens+os.EOL+
+    '*Total Litigations:* '+total_litigations
+  );
+});
+
+bot.on('text', ctx => {
+  switch(ctx.session.step){
+    case 'node_id':
+      ctx.session.node_id = ctx.message.text
+      break
+    default:
+      return //ctx.reply('Unknown command')
+  }
+
+  ctx.reply('Node ID has been set to '+ctx.session.node_id+'. You can run /mynodestats to get your stats!')
+
+  ctx.session.step = undefined
+});
+//-----------------END MY NODE COMMANDS---------------------------------------
 //---------------------------------START JOB COMMANDS-------------------------
 //active jobs
 bot.command('activejobs', async (ctx) => {
