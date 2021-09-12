@@ -1,0 +1,26 @@
+{
+  "name": "otcommunitybot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bot.js",
+  "dependencies": {
+    "date-and-time": "^2.0.0",
+    "dotenv": "^10.0.0",
+    "sqlite3": "^5.0.2",
+    "telegraf": "^3.38.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CosmiCloud/OTCommunityBot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CosmiCloud/OTCommunityBot/issues"
+  },
+  "homepage": "https://github.com/CosmiCloud/OTCommunityBot#readme"
+}
