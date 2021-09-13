@@ -24,7 +24,7 @@ try{
       },
       jobs: async function jobs(){
         try {
-          var jobs = 'sudo curl -X GET "https://v5api.othub.info/api/jobs/jobcreatedcountinperiod?timePeriod=hours&time=24" -H  "accept: text/plain"'
+          var jobs = 'sudo curl -X GET "https://v5api.othub.info/api/jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&onlyFinalizedJobs=true" -H  "accept: text/plain"'
           var jobs = await exec(jobs);
           return jobs.stdout;
         }catch(e){
@@ -34,7 +34,7 @@ try{
       },
       ethjobs: async function jobs(){
         try {
-          var jobs = 'sudo curl -X GET "https://v5api.othub.info/api/jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&blockchainID=1" -H  "accept: text/plain"'
+          var jobs = 'sudo curl -X GET "https://v5api.othub.info/api/jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&blockchainID=1&onlyFinalizedJobs=true" -H  "accept: text/plain"'
           var jobs = await exec(jobs);
           return jobs.stdout;
         }catch(e){
@@ -44,7 +44,7 @@ try{
       },
       xdaijobs: async function jobs(){
         try {
-          var jobs = 'sudo curl -X GET "https://v5api.othub.info/api/jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&blockchainID=2" -H  "accept: text/plain"'
+          var jobs = 'sudo curl -X GET "https://v5api.othub.info/api/jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&blockchainID=2&onlyFinalizedJobs=true" -H  "accept: text/plain"'
           var jobs = await exec(jobs);
           return jobs.stdout;
         }catch(e){
@@ -54,7 +54,7 @@ try{
       },
       polyjobs: async function jobs(){
         try {
-          var jobs = 'sudo curl -X GET "https://v5api.othub.info/api/jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&blockchainID=3" -H  "accept: text/plain"'
+          var jobs = 'sudo curl -X GET "https://v5api.othub.info/api/jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&blockchainID=3&onlyFinalizedJobs=true" -H  "accept: text/plain"'
           var jobs = await exec(jobs);
           return jobs.stdout;
         }catch(e){
