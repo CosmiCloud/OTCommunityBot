@@ -582,7 +582,7 @@ try{
       const db = new sqlite3.Database(__dirname+'/bot.db');
 
       await db.all("SELECT date_last_used FROM command_history WHERE command = 'jobs'", async function(err, row) {
-        if(row != ''){
+        if(row != null){
           if(row[0].date_last_used){
             var date1 = new Date(row[0].date_last_used);
             var date2 = new Date();
@@ -635,7 +635,7 @@ try{
       const db = new sqlite3.Database(__dirname+'/bot.db');
 
       await db.all("SELECT date_last_used FROM command_history WHERE command = 'ethjobs'", async function(err, row) {
-        if(row != ''){
+        if(row != null){
           if(row[0].date_last_used){
             var date1 = new Date(row[0].date_last_used);
             var date2 = new Date();
