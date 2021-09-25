@@ -221,7 +221,27 @@ try{
           console.log(e)
           return'I wasnt able to find the jobs... Lets blame Calvin!';
         }
-       }
+       },
+     avg_reward: async function avg_reward(){
+         try {
+           var avg_reward = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.All.JobsReward24H'"
+           var avg_reward = await exec(avg_reward);
+           return avg_reward.stdout;
+         }catch(e){
+           console.log(e)
+           return'I wasnt able to find the jobs... Lets blame Calvin!';
+         }
+        },
+      trac_usd_price: async function trac_usd_price(){
+          try {
+            var trac_usd_price = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.PriceUsd'"
+            var trac_usd_price = await exec(trac_usd_price);
+            return trac_usd_price.stdout;
+          }catch(e){
+            console.log(e)
+            return'I wasnt able to find the jobs... Lets blame Calvin!';
+          }
+         }
   }
 
   bot.command('bothelp', async (ctx) => {
@@ -231,6 +251,7 @@ try{
         '/createprofile - DM ME!'+os.EOL+
         '/myprofile'+os.EOL+
         '/nodehelp'+os.EOL+
+        '/profit'+os.EOL+
         '/backup'+os.EOL+
         '/freespace'+os.EOL+
         '/dockerless'+os.EOL+
@@ -279,7 +300,7 @@ try{
   bot.command('freespace', async (ctx) => {
     try{
       return ctx.reply(
-        'Please visit this link to see how to back your node up: https://www.otnode.com//node-space-management'+os.EOL+
+        'Please visit this link to see how to potentially clear up space on your node: https://www.otnode.com//node-space-management'+os.EOL+
         'You can also try running the below commands to free space.'+os.EOL+
         'wget https://raw.githubusercontent.com/calr0x/OT-Settings/main/space-maker.sh'+os.EOL+
         'chmod +x space-maker.sh'+os.EOL+
@@ -297,7 +318,7 @@ try{
     try{
       return ctx.reply(
         'Sometimes running your node in docker has its draw backs. Below is a community developed way of running without docker.'+os.EOL+
-        'https://github.com/calr0x/OT-DockSucker'+os.EOL+
+        'github.com/calr0x/OT-DockSucker'+os.EOL+
         'Thanks Calvin!'
       )
       await ctx.deleteMessage()
@@ -520,6 +541,130 @@ try{
 
 
   //-----------------END MY NODE COMMANDS---------------------------------------
+  bot.command('profit', async (ctx) => {
+    try{
+      const db = new sqlite3.Database(__dirname+'/bot.db');
+
+      await db.all("SELECT date_last_used FROM command_history WHERE command = 'profit'", async function(err, row) {
+        if(row != ''){
+          if(row[0].date_last_used){
+            var date1 = new Date(row[0].date_last_used);
+            var date2 = new Date();
+          }else{
+            var date1 = 1
+            var date2 = 99999999999999999999
+          }
+        }else{
+          var date1 = 1
+          var date2 = 99999999999999999999
+        }
+
+          var diffTime = Math.abs(date2 - date1);
+          var date1 = Math.abs(date1);
+          var three_min = 1*60*1000
+          if(diffTime > three_min && ctx.message.chat.type != 'private'){
+      			//put command code here
+            var messy = ctx.message.text
+            var messy = messy.replace('/profit', '')
+
+            if (messy == ''){
+              var custom = 'no'
+              var staked_trac = 3500
+              var vps_cost_usd = 10
+            }else{
+              var custom = 'yes'
+              var messy = messy.trim();
+
+              var staked_trac = messy.substr(0,messy.indexOf(' '));
+              if(isNaN(staked_trac) == true || staked_trac <= 3000 || staked_trac > 100000){
+                try{
+                  await ctx.reply('Please provide only staked amount and vps cost in that order separated by a space. Staked trac must be between 3000 and 100000.')
+                  await ctx.deleteMessage()
+                  return;
+                }catch(e){
+                  console.log('didnt delete message probs not admin')
+                }
+                return;
+              }
+
+              var vps_cost_usd = messy.substr(messy.indexOf(' ')+1);
+              if(isNaN(vps_cost_usd) == true || vps_cost_usd > 100000){
+                try{
+                  await ctx.reply('Please provide only staked amount and vps cost in that order separated by a space. VPS cost cannot exceed 100000.')
+                  await ctx.deleteMessage()
+                  return;
+                }catch(e){
+                  console.log('didnt delete message probs not admin')
+                }
+                return;
+              }
+            }
+
+              var jobs24h = await module.exports.jobs();
+              var jobs24h = jobs24h * 3
+
+              var nodes = await module.exports.xdainodes();
+  				    var nodes = nodes.slice(0,-1);
+              var nodes = Number(nodes);
+
+              var jobs_per_node = jobs24h / nodes
+
+              var avg_reward = await module.exports.avg_reward();
+              var avg_reward = Number(avg_reward);
+
+              var trac_usd_price = await module.exports.trac_usd_price();
+              var trac_usd_price = Number(trac_usd_price);
+
+              var avg_monthly_reward = jobs_per_node * 30 * avg_reward
+              var avg_usd_reward =  avg_monthly_reward * trac_usd_price
+              var usd_after_vps = avg_usd_reward - vps_cost_usd
+
+              var usd_staked = staked_trac * trac_usd_price
+              var apy = usd_after_vps * 12 / usd_staked
+              var apy = apy.toFixed(3);
+              var apy = apy * 100
+
+              if(custom == 'no'){
+                await ctx.reply("The current profitability of staking on the ODN is "+apy+"% APY assuming you are staking 3500 trac and are paying $10/month for your vps.");
+              }else{
+                await ctx.reply("The current profitability of staking on the ODN is "+apy+"% APY assuming you are staking "+staked_trac+" trac and are paying $"+vps_cost_usd+"/month for your vps.");
+              }
+
+            var time_stamp = new Date();
+            const db = new sqlite3.Database(__dirname+'/bot.db');
+            await db.exec("REPLACE INTO command_history VALUES ('profit','"+time_stamp+"')", async function(err, row){
+              if(err){
+                console.log(err)
+              }else{
+                console.log('insert timestamp into db')
+              }
+            });
+            await db.close();
+
+            try{
+              await ctx.deleteMessage()
+            }catch(e){
+              console.log('didnt delete message probs not admin')
+            }
+
+          }else if(ctx.message.chat.type == 'private'){
+			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
+          }else{
+            var remaining = three_min - diffTime
+            console.log(remaining+' remaining')
+            try{
+              await ctx.deleteMessage()
+            }catch(e){
+              console.log('didnt delete message probs not admin')
+            }
+          }
+      });
+      await db.close();
+    }catch(e){
+      console.log(e)
+      return ctx.reply('I wasnt able to run that command.')
+    }
+  });
 
   //---------------------------------START JOB COMMANDS-------------------------
   //active jobs
@@ -582,7 +727,7 @@ try{
       const db = new sqlite3.Database(__dirname+'/bot.db');
 
       await db.all("SELECT date_last_used FROM command_history WHERE command = 'jobs'", async function(err, row) {
-        if(row != null){
+        if(row != ''){
           if(row[0].date_last_used){
             var date1 = new Date(row[0].date_last_used);
             var date2 = new Date();
@@ -635,7 +780,7 @@ try{
       const db = new sqlite3.Database(__dirname+'/bot.db');
 
       await db.all("SELECT date_last_used FROM command_history WHERE command = 'ethjobs'", async function(err, row) {
-        if(row != null){
+        if(row != ''){
           if(row[0].date_last_used){
             var date1 = new Date(row[0].date_last_used);
             var date2 = new Date();
