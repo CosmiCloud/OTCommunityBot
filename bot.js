@@ -246,6 +246,7 @@ try{
 
   bot.command('bothelp', async (ctx) => {
     try{
+      await ctx.deleteMessage()
       return ctx.reply(
         'b-OT Commands(3min cooldown):'+os.EOL+
         '/createprofile - DM ME!'+os.EOL+
@@ -255,6 +256,8 @@ try{
         '/backup'+os.EOL+
         '/freespace'+os.EOL+
         '/dockerless'+os.EOL+
+        '/overlay'+os.EOL+
+        '/pruning'+os.EOL+
         '/jobs'+os.EOL+
         '/activejobs'+os.EOL+
         '/nodes'+os.EOL+
@@ -262,7 +265,6 @@ try{
         '/locked'+os.EOL+
         '/payouts'
       )
-      await ctx.deleteMessage()
     }catch(e){
       console.log(e)
       return ctx.reply('I dont feel so good...')
@@ -271,13 +273,13 @@ try{
 
   bot.command('nodehelp', async (ctx) => {
     try{
+      await ctx.deleteMessage()
       return ctx.reply(
         'OT-Hub: https://othub.origin-trail.network/dashboard'+os.EOL+
         'Discord Support: https://discord.gg/QCb3hqa4'+os.EOL+
         'Start A New Node: otnode.com'+os.EOL+
         'Support Email: tech@origin-trail.com'
       )
-      await ctx.deleteMessage()
     }catch(e){
       console.log(e)
       return ctx.reply('I dont feel so good...')
@@ -286,11 +288,11 @@ try{
 
   bot.command('backup', async (ctx) => {
     try{
+      await ctx.deleteMessage()
       return ctx.reply(
         'Please visit this link to see how to back your node up: https://www.otnode.com/maintenance/node-backup'+os.EOL+
         'Thanks Millian and contributors!'
       )
-      await ctx.deleteMessage()
     }catch(e){
       console.log(e)
       return ctx.reply('I dont feel so good...')
@@ -299,6 +301,7 @@ try{
 
   bot.command('freespace', async (ctx) => {
     try{
+      await ctx.deleteMessage()
       return ctx.reply(
         'Please visit this link to see how to potentially clear up space on your node: https://www.otnode.com//node-space-management'+os.EOL+
         'You can also try running the below commands to free space.'+os.EOL+
@@ -307,7 +310,6 @@ try{
         './space-maker.sh'+os.EOL+
         'Thanks Millian and Calvin!'
       )
-      await ctx.deleteMessage()
     }catch(e){
       console.log(e)
       ctx.reply('I dont feel so good...')
@@ -316,12 +318,37 @@ try{
 
   bot.command('dockerless', async (ctx) => {
     try{
+      await ctx.deleteMessage()
       return ctx.reply(
         'Sometimes running your node in docker has its draw backs. Below is a community developed way of running without docker.'+os.EOL+
         'github.com/calr0x/OT-DockSucker'+os.EOL+
         'Thanks Calvin!'
       )
+    }catch(e){
+      console.log(e)
+      return ctx.reply('I dont feel so good...')
+    }
+  });
+
+  bot.command('overlay', async (ctx) => {
+    try{
       await ctx.deleteMessage()
+      return ctx.reply(
+        'The Cosmic Overlay is a gui/interface built for docker nodes. You can find it here: https://github.com/CosmiCloud/Cosmic_OverlayV2'
+      )
+    }catch(e){
+      console.log(e)
+      return ctx.reply('I dont feel so good...')
+    }
+  });
+
+  bot.command('pruning', async (ctx) => {
+    try{
+      await ctx.deleteMessage()
+      return ctx.reply(
+        'If you would like to easily add data pruning to your node config, you can run the following command on your server:'+os.EOL+
+        'wget https://raw.githubusercontent.com/calr0x/OT-Settings/main/data/add-pruning.sh && chmod +x add-pruning.sh && ./add-pruning.sh'
+      )
     }catch(e){
       console.log(e)
       return ctx.reply('I dont feel so good...')
