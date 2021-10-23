@@ -303,7 +303,7 @@ try{
     try{
       await ctx.deleteMessage()
       return ctx.reply(
-        'Please visit this link to see how to potentially clear up space on your node: https://www.otnode.com/node-space-management'+os.EOL+
+        'Please visit this link to see how to potentially clear up space on your node: https://www.otnode.com/maintenance/node-space-management'+os.EOL+
         'You can also try running the below commands to free space.'+os.EOL+
         'wget https://raw.githubusercontent.com/calr0x/OT-Settings/main/space-maker.sh'+os.EOL+
         'chmod +x space-maker.sh'+os.EOL+
