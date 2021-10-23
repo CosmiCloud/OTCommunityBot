@@ -303,12 +303,12 @@ try{
     try{
       await ctx.deleteMessage()
       return ctx.reply(
-        'Please visit this link to see how to potentially clear up space on your node: https://www.otnode.com//node-space-management'+os.EOL+
+        'Please visit this link to see how to potentially clear up space on your node: https://www.otnode.com/node-space-management'+os.EOL+
         'You can also try running the below commands to free space.'+os.EOL+
         'wget https://raw.githubusercontent.com/calr0x/OT-Settings/main/space-maker.sh'+os.EOL+
         'chmod +x space-maker.sh'+os.EOL+
         './space-maker.sh'+os.EOL+
-        'Thanks Millian and Calvin!'
+        'Thanks Satan!'
       )
     }catch(e){
       console.log(e)
@@ -652,9 +652,9 @@ try{
               var apy = apy * 100
 
               if(custom == 'no'){
-                await ctx.reply("The current profitability of staking on the ODN is "+apy+"% APY assuming you are staking 3500 trac and are paying $10/month for your vps.");
+                await ctx.reply("The current profitability of staking on the ODN is "+apy+"% APY assuming you are staking 3500 trac and are paying $10/month for your vps. This number can be inaccurate based on job holding time and how many jobs there have been in the past week.");
               }else{
-                await ctx.reply("The current profitability of staking on the ODN is "+apy+"% APY assuming you are staking "+staked_trac+" trac and are paying $"+vps_cost_usd+"/month for your vps.");
+                await ctx.reply("The current profitability of staking on the ODN is "+apy+"% APY assuming you are staking "+staked_trac+" trac and are paying $"+vps_cost_usd+"/month for your vps. This number can be inaccurate based on job holding time and how many jobs there have been in the past week.");
               }
 
             var time_stamp = new Date();
