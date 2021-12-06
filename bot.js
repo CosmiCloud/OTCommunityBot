@@ -6,6 +6,7 @@ const date = require('date-and-time');
 const { Telegraf, session, Scenes, Markup, BaseScene, Stage } = require('telegraf');
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const sqlite3 = require('sqlite3').verbose();
+const cron = require('node-cron');
 
 try{
 
@@ -243,6 +244,80 @@ try{
           }
          }
   }
+
+  cron.schedule('0 12 * * *', async (ctx) => {
+    try{
+      console.log('Posting ODN stat updates');
+      var trac_usd_price = await module.exports.trac_usd_price();
+      var trac_usd_price = Number(trac_usd_price);
+      var trac_usd_price = trac_usd_price.toFixed(2);
+
+      var payouts = await module.exports.payouts();
+      var payouts = Number(payouts);
+      var payouts = payouts.toFixed(2);
+
+      var usdpayouts = payouts * trac_usd_price
+      var usdpayouts = Number(usdpayouts);
+      var usdpayouts = usdpayouts.toFixed(2);
+      var date = new Date().toISOString().slice(0, 10)
+
+      const nodes = await module.exports.nodes();
+      const tnodes = nodes.slice(0,-1);
+
+      const ethjobs = await module.exports.ethjobs();
+      const xdaijobs = await module.exports.xdaijobs();
+      const polyjobs = await module.exports.polyjobs();
+
+      const ethnodes = await module.exports.ethnodes();
+      const xdainodes = await module.exports.xdainodes();
+      const polynodes = await module.exports.polynodes();
+
+      const tethnodes = ethnodes.slice(0,-1);
+      const txdainodes = xdainodes.slice(0,-1);
+      const tpolynodes = polynodes.slice(0,-1);
+
+      await bot.telegram.sendMessage('-543322141',
+        date+' - Knowledge Graph Daily Stats:'+os.EOL+os.EOL+
+        payouts+' TRAC ($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
+        'Jobs by Network:'+os.EOL+
+        'Ethereum: '+ethjobs+os.EOL+
+        'xDai: '+xdaijobs+os.EOL+
+        'Polygon: '+polyjobs+os.EOL+os.EOL+
+        'Active Nodes(IDs) by Network:'+os.EOL+
+        'Ethereum: '+tethnodes+os.EOL+
+        'xDai: '+txdainodes+os.EOL+
+        'Polygon: '+tpolynodes
+      )
+
+      await bot.telegram.sendMessage('-1001399729852',
+        date+' - Knowledge Graph Daily Stats:'+os.EOL+os.EOL+
+        payouts+' TRAC ($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
+        'Jobs by Network:'+os.EOL+
+        'Ethereum: '+ethjobs+os.EOL+
+        'xDai: '+xdaijobs+os.EOL+
+        'Polygon: '+polyjobs+os.EOL+os.EOL+
+        'Active Nodes(IDs) by Network:'+os.EOL+
+        'Ethereum: '+tethnodes+os.EOL+
+        'xDai: '+txdainodes+os.EOL+
+        'Polygon: '+tpolynodes
+      )
+
+      await bot.telegram.sendMessage('-1001384216088',
+        date+' - Knowledge Graph Daily Stats:'+os.EOL+os.EOL+
+        payouts+' TRAC ($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
+        'Jobs by Network:'+os.EOL+
+        'Ethereum: '+ethjobs+os.EOL+
+        'xDai: '+xdaijobs+os.EOL+
+        'Polygon: '+polyjobs+os.EOL+os.EOL+
+        'Active Nodes(IDs) by Network:'+os.EOL+
+        'Ethereum: '+tethnodes+os.EOL+
+        'xDai: '+txdainodes+os.EOL+
+        'Polygon: '+tpolynodes
+      )
+    }catch(e){
+      console.log(e);
+    }
+  });
 
   bot.command('bothelp', async (ctx) => {
     try{
