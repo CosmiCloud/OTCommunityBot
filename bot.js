@@ -1,5 +1,6 @@
 require('dotenv').config();
 const os = require('os');
+const fs = require('fs');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 const date = require('date-and-time');
@@ -245,75 +246,251 @@ try{
          }
   }
 
-  cron.schedule('0 12 * * *', async (ctx) => {
+  cron.schedule('0 20 * * *', async (ctx) => {
     try{
       console.log('Posting ODN stat updates');
+
+      var date = new Date().toISOString().slice(0, 10)
+
       var trac_usd_price = await module.exports.trac_usd_price();
       var trac_usd_price = Number(trac_usd_price);
       var trac_usd_price = trac_usd_price.toFixed(2);
+
+
+
+      var dir = "/root/odn_stats"
+      if(fs.existsSync(dir)){
+        console.log('Stats folder exists')
+
+        var payout_ath = 'sudo cat /root/odn_stats/payout_stats.txt'
+        var payout_ath = await exec(payout_ath)
+        var payout_ath = payout_ath.stdout
+
+        var prev_ethjobs = 'sudo cat /root/odn_stats/ethjob_stats.txt'
+        var prev_ethjobs = await exec(prev_ethjobs)
+        var prev_ethjobs = prev_ethjobs.stdout
+
+        var prev_xdaijobs = 'sudo cat /root/odn_stats/xdaijob_stats.txt'
+        var prev_xdaijobs = await exec(prev_xdaijobs)
+        var prev_xdaijobs = prev_xdaijobs.stdout
+
+        var prev_polyjobs = 'sudo cat /root/odn_stats/polyjob_stats.txt'
+        var prev_polyjobs = await exec(prev_polyjobs)
+        var prev_polyjobs = prev_polyjobs.stdout
+
+        var prev_ethnodes = 'sudo cat /root/odn_stats/ethnode_stats.txt'
+        var prev_ethnodes = await exec(prev_ethnodes)
+        var prev_ethnodes = prev_ethnodes.stdout
+
+        var prev_xdainodes = 'sudo cat /root/odn_stats/xdainode_stats.txt'
+        var prev_xdainodes = await exec(prev_xdainodes)
+        var prev_xdainodes = prev_xdainodes.stdout
+
+        var prev_polynodes = 'sudo cat /root/odn_stats/polynode_stats.txt'
+        var prev_polynodes = await exec(prev_polynodes)
+        var prev_polynodes = prev_polynodes.stdout
+      }else{
+        var mk_stats_fldr = 'sudo mkdir /root/odn_stats'
+        await exec(mk_stats_fldr)
+        var payout_stats = 'sudo touch /root/odn_stats/payout_stats.txt'
+        await exec(payout_stats)
+        var ethjob_stats = 'sudo touch /root/odn_stats/ethjob_stats.txt'
+        await exec(ethjob_stats)
+        var xdaijob_stats = 'sudo touch /root/odn_stats/xdaijob_stats.txt'
+        await exec(xdaijob_stats)
+        var polyjob_stats = 'sudo touch /root/odn_stats/polyjob_stats.txt'
+        await exec(polyjob_stats)
+        var ethnode_stats = 'sudo touch /root/odn_stats/ethnode_stats.txt'
+        await exec(ethnode_stats)
+        var xdainode_stats = 'sudo touch /root/odn_stats/xdainode_stats.txt'
+        await exec(xdainode_stats)
+        var polynode_stats = 'sudo touch /root/odn_stats/polynode_stats.txt'
+        await exec(polynode_stats)
+
+        var payout_ath = 0
+        var prev_ethjobs = 0
+        var prev_xdaijobs = 0
+        var prev_polyjobs = 0
+        var prev_ethnodes = 0
+        var prev_xdainodes = 0
+        var prev_polynodes = 0
+      }
 
       var payouts = await module.exports.payouts();
       var payouts = Number(payouts);
       var payouts = payouts.toFixed(2);
 
+      if(payouts > payout_ath){
+        var payout_stats = 'sudo rm -rf /root/odn_stats/payout_stats.txt'
+        await exec(payout_stats)
+
+        await fs.writeFile('/root/odn_stats/payout_stats.txt', payouts, err => {
+          if (err) {
+            console.error(err)
+            return
+          }
+          //file written successfully
+        })
+      }
+
+      var ethjobs = await module.exports.ethjobs();
+      var ethjobs = Number(ethjobs);
+      var prev_ethjobs = Number(prev_ethjobs);
+      var ethjob_chng = ethjobs - prev_ethjobs
+      if(ethjob_chng == 0){
+        var ethjob_chng = '0.00'
+      }else{
+        var ethjob_chng = ethjob_chng / ethjobs
+        var ethjob_chng = ethjob_chng * 100
+        var ethjob_chng = ethjob_chng.toFixed(2);
+      }
+
+      await fs.writeFile('/root/odn_stats/ethjob_stats.txt', ethjobs, err => {
+        if (err) {
+          console.error(err)
+          return
+        }
+        //file written successfully
+      })
+
+      var xdaijobs = await module.exports.xdaijobs();
+      var xdaijobs = Number(xdaijobs);
+      var prev_xdaijobs = Number(prev_xdaijobs);
+      var xdaijob_chng = xdaijobs - prev_xdaijobs
+      if(xdaijob_chng == 0){
+        var xdaijob_chng = '0.00'
+      }else{
+        var xdaijob_chng = xdaijob_chng / xdaijobs
+        var xdaijob_chng = xdaijob_chng * 100
+        var xdaijob_chng = xdaijob_chng.toFixed(2);
+      }
+
+      await fs.writeFile('/root/odn_stats/xdaijob_stats.txt', xdaijobs, err => {
+        if (err) {
+          console.error(err)
+          return
+        }
+        //file written successfully
+      })
+
+      var polyjobs = await module.exports.polyjobs();
+      var polyjobs = Number(polyjobs);
+      var prev_polyjobs = Number(prev_polyjobs);
+      var polyjob_chng = polyjobs - prev_polyjobs
+      if(polyjob_chng == 0){
+        var polyjob_chng = '0.00'
+      }else{
+        var polyjob_chng = polyjob_chng / polyjobs
+        var polyjob_chng = polyjob_chng * 100
+        var polyjob_chng = polyjob_chng.toFixed(2);
+      }
+
+      await fs.writeFile('/root/odn_stats/polyjob_stats.txt', polyjobs, err => {
+        if (err) {
+          console.error(err)
+          return
+        }
+        //file written successfully
+      })
+
+      var ethnodes = await module.exports.ethnodes();
+      var ethnodes = Number(ethnodes);
+      var prev_ethnodes = Number(prev_ethnodes);
+      var ethnodes_chng = ethnodes - prev_ethnodes
+      var ethnodes_chng = ethnodes_chng / ethnodes
+      var ethnodes_chng = ethnodes_chng * 100
+      var ethnodes_chng = ethnodes_chng.toFixed(2);
+
+      await fs.writeFile('/root/odn_stats/ethnode_stats.txt', ethnodes, err => {
+        if (err) {
+          console.error(err)
+          return
+        }
+        //file written successfully
+      })
+
+      var xdainodes = await module.exports.xdainodes();
+      var xdainodes = Number(xdainodes);
+      var prev_xdainodes = Number(prev_xdainodes);
+      var xdainodes_chng = xdainodes - prev_xdainodes
+      var xdainodes_chng = xdainodes_chng / xdainodes
+      var xdainodes_chng = xdainodes_chng * 100
+      var xdainodes_chng = xdainodes_chng.toFixed(2);
+
+      await fs.writeFile('/root/odn_stats/xdainode_stats.txt', xdainodes, err => {
+        if (err) {
+          console.error(err)
+          return
+        }
+        //file written successfully
+      })
+
+      var polynodes = await module.exports.polynodes();
+      var polynodes = Number(polynodes);
+      //var prev_polynodes = Number(prev_polynodes);
+      var polynodes_chng = polynodes - prev_polynodes
+      var polynodes_chng = polynodes_chng / polynodes
+      var polynodes_chng = polynodes_chng * 100
+      var polynodes_chng = polynodes_chng.toFixed(2);
+
+      await fs.writeFile('/root/odn_stats/polynode_stats.txt', polynodes, err => {
+        if (err) {
+          console.error(err)
+          return
+        }
+        //file written successfully
+      })
+
       var usdpayouts = payouts * trac_usd_price
       var usdpayouts = Number(usdpayouts);
       var usdpayouts = usdpayouts.toFixed(2);
-      var date = new Date().toISOString().slice(0, 10)
 
-      const nodes = await module.exports.nodes();
-      const tnodes = nodes.slice(0,-1);
-
-      const ethjobs = await module.exports.ethjobs();
-      const xdaijobs = await module.exports.xdaijobs();
-      const polyjobs = await module.exports.polyjobs();
-
-      const ethnodes = await module.exports.ethnodes();
-      const xdainodes = await module.exports.xdainodes();
-      const polynodes = await module.exports.polynodes();
-
-      const tethnodes = ethnodes.slice(0,-1);
-      const txdainodes = xdainodes.slice(0,-1);
-      const tpolynodes = polynodes.slice(0,-1);
+      var usdpayouts_ath = payout_ath * trac_usd_price
+      var usdpayouts_ath = Number(usdpayouts_ath);
+      var usdpayouts_ath = usdpayouts_ath.toFixed(2);
 
       await bot.telegram.sendMessage('-543322141',
         date+' - Knowledge Graph Daily Stats:'+os.EOL+os.EOL+
-        payouts+' TRAC ($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
+        'ATH:   '+payout_ath+' TRAC ($'+usdpayouts_ath+' USD) paid out!'+os.EOL+
+        'Today: '+payouts+' TRAC($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
         'Jobs by Network:'+os.EOL+
-        'Ethereum: '+ethjobs+os.EOL+
-        'xDai: '+xdaijobs+os.EOL+
-        'Polygon: '+polyjobs+os.EOL+os.EOL+
+        'Ethereum: '+ethjobs+' ('+ethjob_chng+'%)'+os.EOL+
+        'xDai: '+xdaijobs+' ('+xdaijob_chng+'%)'+os.EOL+
+        'Polygon: '+polyjobs+' ('+polyjob_chng+'%)'+os.EOL+os.EOL+
         'Active Nodes(IDs) by Network:'+os.EOL+
-        'Ethereum: '+tethnodes+os.EOL+
-        'xDai: '+txdainodes+os.EOL+
-        'Polygon: '+tpolynodes
+        'Ethereum: '+ethnodes+' ('+ethnodes_chng+'%)'+os.EOL+
+        'xDai: '+xdainodes+' ('+xdainodes_chng+'%)'+os.EOL+
+        'Polygon: '+polynodes+' ('+polynodes_chng+'%)'
       )
 
       await bot.telegram.sendMessage('-1001399729852',
         date+' - Knowledge Graph Daily Stats:'+os.EOL+os.EOL+
-        payouts+' TRAC ($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
+        'ATH:   '+payout_ath+' TRAC ($'+usdpayouts_ath+' USD) paid out!'+os.EOL+
+        'Today: '+payouts+' TRAC($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
         'Jobs by Network:'+os.EOL+
-        'Ethereum: '+ethjobs+os.EOL+
-        'xDai: '+xdaijobs+os.EOL+
-        'Polygon: '+polyjobs+os.EOL+os.EOL+
+        'Ethereum: '+ethjobs+' ('+ethjob_chng+'%)'+os.EOL+
+        'xDai: '+xdaijobs+' ('+xdaijob_chng+'%)'+os.EOL+
+        'Polygon: '+polyjobs+' ('+polyjob_chng+'%)'+os.EOL+os.EOL+
         'Active Nodes(IDs) by Network:'+os.EOL+
-        'Ethereum: '+tethnodes+os.EOL+
-        'xDai: '+txdainodes+os.EOL+
-        'Polygon: '+tpolynodes
+        'Ethereum: '+ethnodes+' ('+ethnodes_chng+'%)'+os.EOL+
+        'xDai: '+xdainodes+' ('+xdainodes_chng+'%)'+os.EOL+
+        'Polygon: '+polynodes+' ('+polynodes_chng+'%)'
       )
 
       await bot.telegram.sendMessage('-1001384216088',
         date+' - Knowledge Graph Daily Stats:'+os.EOL+os.EOL+
-        payouts+' TRAC ($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
+        'ATH:   '+payout_ath+' TRAC ($'+usdpayouts_ath+' USD) paid out!'+os.EOL+
+        'Today: '+payouts+' TRAC($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
         'Jobs by Network:'+os.EOL+
-        'Ethereum: '+ethjobs+os.EOL+
-        'xDai: '+xdaijobs+os.EOL+
-        'Polygon: '+polyjobs+os.EOL+os.EOL+
+        'Ethereum: '+ethjobs+' ('+ethjob_chng+'%)'+os.EOL+
+        'xDai: '+xdaijobs+' ('+xdaijob_chng+'%)'+os.EOL+
+        'Polygon: '+polyjobs+' ('+polyjob_chng+'%)'+os.EOL+os.EOL+
         'Active Nodes(IDs) by Network:'+os.EOL+
-        'Ethereum: '+tethnodes+os.EOL+
-        'xDai: '+txdainodes+os.EOL+
-        'Polygon: '+tpolynodes
+        'Ethereum: '+ethnodes+' ('+ethnodes_chng+'%)'+os.EOL+
+        'xDai: '+xdainodes+' ('+xdainodes_chng+'%)'+os.EOL+
+        'Polygon: '+polynodes+' ('+polynodes_chng+'%)'
       )
+      console.log('Done posting stats.')
     }catch(e){
       console.log(e);
     }
