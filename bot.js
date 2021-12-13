@@ -337,6 +337,13 @@ try{
       var ethjobs = Number(ethjobs);
       var prev_ethjobs = Number(prev_ethjobs);
       var ethjob_chng = ethjobs - prev_ethjobs
+
+      if(ethjobs < prev_ethjobs){
+        var eth_sym = ''
+      }else{
+        var eth_sym = '+'
+      }
+
       if(ethjob_chng == 0){
         var ethjob_chng = '0.00'
       }else{
@@ -357,6 +364,13 @@ try{
       var xdaijobs = Number(xdaijobs);
       var prev_xdaijobs = Number(prev_xdaijobs);
       var xdaijob_chng = xdaijobs - prev_xdaijobs
+
+      if(xdaijobs < prev_xdaijobs){
+        var xdai_sym = ''
+      }else{
+        var xdai_sym = '+'
+      }
+
       if(xdaijob_chng == 0){
         var xdaijob_chng = '0.00'
       }else{
@@ -377,6 +391,13 @@ try{
       var polyjobs = Number(polyjobs);
       var prev_polyjobs = Number(prev_polyjobs);
       var polyjob_chng = polyjobs - prev_polyjobs
+
+      if(polyjobs < prev_polyjobs){
+        var poly_sym = ''
+      }else{
+        var poly_sym = '+'
+      }
+
       if(polyjob_chng == 0){
         var polyjob_chng = '0.00'
       }else{
@@ -397,6 +418,13 @@ try{
       var ethnodes = Number(ethnodes);
       var prev_ethnodes = Number(prev_ethnodes);
       var ethnodes_chng = ethnodes - prev_ethnodes
+
+      if(ethnodes < prev_ethnodes){
+        var ethn_sym = ''
+      }else{
+        var ethn_sym = '+'
+      }
+
       var ethnodes_chng = ethnodes_chng / ethnodes
       var ethnodes_chng = ethnodes_chng * 100
       var ethnodes_chng = ethnodes_chng.toFixed(2);
@@ -413,6 +441,13 @@ try{
       var xdainodes = Number(xdainodes);
       var prev_xdainodes = Number(prev_xdainodes);
       var xdainodes_chng = xdainodes - prev_xdainodes
+
+      if(xdainodes < prev_xdainodes){
+        var xdain_sym = ''
+      }else{
+        var xdain_sym = '+'
+      }
+
       var xdainodes_chng = xdainodes_chng / xdainodes
       var xdainodes_chng = xdainodes_chng * 100
       var xdainodes_chng = xdainodes_chng.toFixed(2);
@@ -429,6 +464,13 @@ try{
       var polynodes = Number(polynodes);
       //var prev_polynodes = Number(prev_polynodes);
       var polynodes_chng = polynodes - prev_polynodes
+
+      if(polynodes < prev_polynodes){
+        var polyn_sym = ''
+      }else{
+        var polyn_sym = '+'
+      }
+
       var polynodes_chng = polynodes_chng / polynodes
       var polynodes_chng = polynodes_chng * 100
       var polynodes_chng = polynodes_chng.toFixed(2);
@@ -452,43 +494,43 @@ try{
       await bot.telegram.sendMessage('-543322141',
         date+' - Knowledge Graph Daily Stats:'+os.EOL+os.EOL+
         'ATH:   '+payout_ath+' TRAC ($'+usdpayouts_ath+' USD) paid out!'+os.EOL+
-        'Today: '+payouts+' TRAC($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
+        'Today: '+payouts+' TRAC ($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
         'Jobs by Network:'+os.EOL+
-        'Ethereum: '+ethjobs+' ('+ethjob_chng+'%)'+os.EOL+
-        'xDai: '+xdaijobs+' ('+xdaijob_chng+'%)'+os.EOL+
-        'Polygon: '+polyjobs+' ('+polyjob_chng+'%)'+os.EOL+os.EOL+
+        'Ethereum: '+ethjobs+' ('+eth_sym+ethjob_chng+'%)'+os.EOL+
+        'xDai: '+xdaijobs+' ('+xdai_sym+xdaijob_chng+'%)'+os.EOL+
+        'Polygon: '+polyjobs+' ('+poly_sym+polyjob_chng+'%)'+os.EOL+os.EOL+
         'Active Nodes(IDs) by Network:'+os.EOL+
-        'Ethereum: '+ethnodes+' ('+ethnodes_chng+'%)'+os.EOL+
-        'xDai: '+xdainodes+' ('+xdainodes_chng+'%)'+os.EOL+
-        'Polygon: '+polynodes+' ('+polynodes_chng+'%)'
+        'Ethereum: '+ethnodes+' ('+ethn_sym+ethnodes_chng+'%)'+os.EOL+
+        'xDai: '+xdainodes+' ('+xdain_sym+xdainodes_chng+'%)'+os.EOL+
+        'Polygon: '+polynodes+' ('+polyn_sym+polynodes_chng+'%)'
       )
 
       await bot.telegram.sendMessage('-1001399729852',
         date+' - Knowledge Graph Daily Stats:'+os.EOL+os.EOL+
         'ATH:   '+payout_ath+' TRAC ($'+usdpayouts_ath+' USD) paid out!'+os.EOL+
-        'Today: '+payouts+' TRAC($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
+        'Today: '+payouts+' TRAC ($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
         'Jobs by Network:'+os.EOL+
-        'Ethereum: '+ethjobs+' ('+ethjob_chng+'%)'+os.EOL+
-        'xDai: '+xdaijobs+' ('+xdaijob_chng+'%)'+os.EOL+
-        'Polygon: '+polyjobs+' ('+polyjob_chng+'%)'+os.EOL+os.EOL+
+        'Ethereum: '+ethjobs+' ('+eth_sym+ethjob_chng+'%)'+os.EOL+
+        'xDai: '+xdaijobs+' ('+xdai_sym+xdaijob_chng+'%)'+os.EOL+
+        'Polygon: '+polyjobs+' ('+poly_sym+polyjob_chng+'%)'+os.EOL+os.EOL+
         'Active Nodes(IDs) by Network:'+os.EOL+
-        'Ethereum: '+ethnodes+' ('+ethnodes_chng+'%)'+os.EOL+
-        'xDai: '+xdainodes+' ('+xdainodes_chng+'%)'+os.EOL+
-        'Polygon: '+polynodes+' ('+polynodes_chng+'%)'
+        'Ethereum: '+ethnodes+' ('+ethn_sym+ethnodes_chng+'%)'+os.EOL+
+        'xDai: '+xdainodes+' ('+xdain_sym+xdainodes_chng+'%)'+os.EOL+
+        'Polygon: '+polynodes+' ('+polyn_sym+polynodes_chng+'%)'
       )
 
       await bot.telegram.sendMessage('-1001384216088',
         date+' - Knowledge Graph Daily Stats:'+os.EOL+os.EOL+
         'ATH:   '+payout_ath+' TRAC ($'+usdpayouts_ath+' USD) paid out!'+os.EOL+
-        'Today: '+payouts+' TRAC($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
+        'Today: '+payouts+' TRAC ($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
         'Jobs by Network:'+os.EOL+
-        'Ethereum: '+ethjobs+' ('+ethjob_chng+'%)'+os.EOL+
-        'xDai: '+xdaijobs+' ('+xdaijob_chng+'%)'+os.EOL+
-        'Polygon: '+polyjobs+' ('+polyjob_chng+'%)'+os.EOL+os.EOL+
+        'Ethereum: '+ethjobs+' ('+eth_sym+ethjob_chng+'%)'+os.EOL+
+        'xDai: '+xdaijobs+' ('+xdai_sym+xdaijob_chng+'%)'+os.EOL+
+        'Polygon: '+polyjobs+' ('+poly_sym+polyjob_chng+'%)'+os.EOL+os.EOL+
         'Active Nodes(IDs) by Network:'+os.EOL+
-        'Ethereum: '+ethnodes+' ('+ethnodes_chng+'%)'+os.EOL+
-        'xDai: '+xdainodes+' ('+xdainodes_chng+'%)'+os.EOL+
-        'Polygon: '+polynodes+' ('+polynodes_chng+'%)'
+        'Ethereum: '+ethnodes+' ('+ethn_sym+ethnodes_chng+'%)'+os.EOL+
+        'xDai: '+xdainodes+' ('+xdain_sym+xdainodes_chng+'%)'+os.EOL+
+        'Polygon: '+polynodes+' ('+polyn_sym+polynodes_chng+'%)'
       )
       console.log('Done posting stats.')
     }catch(e){
