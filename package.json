@@ -4,11 +4,15 @@
   "description": "",
   "main": "bot.js",
   "dependencies": {
+    "axios": "^0.24.0",
     "date-and-time": "^2.0.0",
     "dotenv": "^10.0.0",
+    "ethereumjs-tx": "^2.1.2",
     "node-cron": "^3.0.0",
+    "sqlite-async": "^1.1.2",
     "sqlite3": "^5.0.2",
-    "telegraf": "^3.38.0"
+    "telegraf": "^3.38.0",
+    "web3": "^1.7.0"
   },
   "devDependencies": {},
   "scripts": {

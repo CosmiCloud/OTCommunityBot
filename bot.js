@@ -1,2269 +1,836 @@
 require('dotenv').config();
-const os = require('os');
-const fs = require('fs');
-const util = require('util');
-const exec = util.promisify(require('child_process').exec);
-const date = require('date-and-time');
+const queryTypes = require("./src/util/queryTypes");
+const dailyStats = require("./src/modules/dailyStats.js");
+const profit = require("./src/modules/profit.js");
+const profile = require("./src/modules/profile.js");
+const tip = require("./src/modules/tip.js");
 const { Telegraf, session, Scenes, Markup, BaseScene, Stage } = require('telegraf');
 const bot = new Telegraf(process.env.BOT_TOKEN);
-const sqlite3 = require('sqlite3').verbose();
+const os = require('os');
+const fs = require('fs');
 const cron = require('node-cron');
 
-try{
+bot.use(session({ ttl: 10 }))
 
-  bot.use(session({ ttl: 10 }))
+//-------------------------------------NO API REQUIRED - AlPHABETICAL --------------------------------------------
+bot.command('backup', async (ctx) => {
+  command = 'backup'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      return ctx.reply(
+        `Please visit this link to see how to back your node up: https://www.otnode.com/maintenance/node-backup`
+      )
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
 
-  module.exports={
-      activejobs: async function jobs(){
-        try {
-          var jobs = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.All.ActiveJobs'"
-          var jobs = await exec(jobs);
-          return jobs.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-      jobs: async function jobs(){
-        try {
-          var jobs = 'sudo curl -X GET "https://v5api.othub.info/api/jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&onlyFinalizedJobs=true" -H  "accept: text/plain"'
-          var jobs = await exec(jobs);
-          return jobs.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-      ethjobs: async function jobs(){
-        try {
-          var jobs = 'sudo curl -X GET "https://v5api.othub.info/api/jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&blockchainID=1&onlyFinalizedJobs=true" -H  "accept: text/plain"'
-          var jobs = await exec(jobs);
-          return jobs.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-      xdaijobs: async function jobs(){
-        try {
-          var jobs = 'sudo curl -X GET "https://v5api.othub.info/api/jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&blockchainID=2&onlyFinalizedJobs=true" -H  "accept: text/plain"'
-          var jobs = await exec(jobs);
-          return jobs.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-      polyjobs: async function jobs(){
-        try {
-          var jobs = 'sudo curl -X GET "https://v5api.othub.info/api/jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&blockchainID=3&onlyFinalizedJobs=true" -H  "accept: text/plain"'
-          var jobs = await exec(jobs);
-          return jobs.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-      nodes: async function nodes(){
-        try {
-          var nodes = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.All.ActiveNodes'"
-          var nodes = await exec(nodes);
-          return nodes.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-      polynodes: async function nodes(){
-        try {
-          var nodes = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.Blockchains[0].ActiveNodes'"
-          var nodes = await exec(nodes);
-          return nodes.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-      xdainodes: async function nodes(){
-        try {
-          var nodes = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.Blockchains[1].ActiveNodes'"
-          var nodes = await exec(nodes);
-          return nodes.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-      ethnodes: async function nodes(){
-        try {
-          var nodes = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.Blockchains[2].ActiveNodes'"
-          var nodes = await exec(nodes);
-          return nodes.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-      payouts: async function payouts(){
-        try {
-          var payouts = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.All.TokensPaidout24H'"
-          var payouts = await exec(payouts);
-          return payouts.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-      ethpayouts: async function payouts(){
-        try {
-          var payouts = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.Blockchains[2].TokensPaidout24H'"
-          var payouts = await exec(payouts);
-          return payouts.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-      xdaipayouts: async function payouts(){
-        try {
-          var payouts = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.Blockchains[1].TokensPaidout24H'"
-          var payouts = await exec(payouts);
-          return payouts.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-    polypayouts: async function payouts(){
-        try {
-          var payouts = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.Blockchains[0].TokensPaidout24H'"
-          var payouts = await exec(payouts);
-          return payouts.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-    staked: async function staked(){
-        try {
-          var staked = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.All.StakedTokens'"
-          var staked = await exec(staked);
-          return staked.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-    ethstaked: async function staked(){
-        try {
-          var staked = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.Blockchains[2].StakedTokens'"
-          var staked = await exec(staked);
-          return staked.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-    xdaistaked: async function staked(){
-        try {
-          var staked = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.Blockchains[1].StakedTokens'"
-          var staked = await exec(staked);
-          return staked.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-    polystaked: async function staked(){
-        try {
-          var staked = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.Blockchains[0].StakedTokens'"
-          var staked = await exec(staked);
-          return staked.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-    locked: async function locked(){
-        try {
-          var locked = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.All.TokensLocked24H'"
-          var locked = await exec(locked);
-          return locked.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-    ethlocked: async function locked(){
-        try {
-          var locked = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.Blockchains[2].TokensLocked24H' "
-          var locked = await exec(locked);
-          return locked.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-    xdailocked: async function locked(){
-        try {
-          var locked = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.Blockchains[1].TokensLocked24H' "
-          var locked = await exec(locked);
-          return locked.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-      },
-    polylocked: async function locked(){
-        try {
-          var locked = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.Blockchains[0].TokensLocked24H' "
-          var locked = await exec(locked);
-          return locked.stdout;
-        }catch(e){
-          console.log(e)
-          return'I wasnt able to find the jobs... Lets blame Calvin!';
-        }
-       },
-     avg_reward: async function avg_reward(){
-         try {
-           var avg_reward = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.All.JobsReward24H'"
-           var avg_reward = await exec(avg_reward);
-           return avg_reward.stdout;
-         }catch(e){
-           console.log(e)
-           return'I wasnt able to find the jobs... Lets blame Calvin!';
-         }
-        },
-      trac_usd_price: async function trac_usd_price(){
-          try {
-            var trac_usd_price = "sudo curl -s https://v5api.othub.info/api/home/HomeV3 | jq '.PriceUsd'"
-            var trac_usd_price = await exec(trac_usd_price);
-            return trac_usd_price.stdout;
-          }catch(e){
-            console.log(e)
-            return'I wasnt able to find the jobs... Lets blame Calvin!';
-          }
-         }
+bot.command('bothelp', async (ctx) => {
+  command = 'bothelp'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      return ctx.reply(
+        `b-OT Commands(3min cooldown):
+        /nodehelp
+        /profit
+        /backup
+        /freespace
+        /dockerless
+        /overlay
+        /pruning
+        /jobs
+        /activejobs
+        /nodes
+        /staked
+        /locked
+        /payouts`
+      )
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('dockerless', async (ctx) => {
+  command = 'dockerless'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      return ctx.reply(
+        `Sometimes running your node in docker has its draw backs. Below is a community developed way of running without docker.
+        github.com/calr0x/OT-DockSucker`
+      )
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('freespace', async (ctx) => {
+  command = 'freespace'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      return ctx.reply(
+        `Please visit this link to see how to potentially clear up space on your node: https://www.otnode.com/maintenance/node-space-management
+        You can also try running the below commands to free space.
+        wget https://raw.githubusercontent.com/calr0x/OT-Settings/main/space-maker.sh
+        chmod +x space-maker.sh
+        ./space-maker.sh`
+      )
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('nodehelp', async (ctx) => {
+  command = 'nodehelp'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      return ctx.reply(
+        `OT-Hub: https://othub.origin-trail.network/dashboard
+        Discord Support: https://discord.gg/QCb3hqa4
+        Start A New Node: otnode.com
+        Support Email: tech@origin-trail.com`
+      )
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('overlay', async (ctx) => {
+  command = 'overlay'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      return ctx.reply(
+        `The Cosmic Overlay is a gui/interface built for docker nodes. You can find it here: https://github.com/CosmiCloud/Cosmic_OverlayV2`
+      )
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('pruning', async (ctx) => {
+  command = 'pruning'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      return ctx.reply(
+        `If you would like to easily add data pruning to your V5 node config, you can run the following command on your server:
+        wget https://raw.githubusercontent.com/calr0x/OT-Settings/main/data/add-pruning.sh && chmod +x add-pruning.sh && ./add-pruning.sh`
+      )
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('activejobs', async (ctx) => {
+  command = 'activejobs'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB();
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.All.ActiveJobs
+        await ctx.reply('There are '+result+' active jobs.')
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('avgreward', async (ctx) => {
+  command = 'avgreward'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB();
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.All.JobsReward24H
+        result = result.toFixed(2);
+        await ctx.reply(`The average jobs pays ${result} TRAC.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('dotjobs', async (ctx) => {
+  command = 'dotjobs'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      // query = queryTypes.queryOTHUB()
+      // ext = `jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&blockchainID=3&onlyFinalizedJobs=true`
+      // await query
+      // .getData(ext)
+      // .then(async ({ result }) => {
+      //   result = result.data
+      //   await ctx.reply(`There have been ${result} polygon jobs in the past 24 hours.`)
+      // })
+      // .catch((error) => console.log(`Error : ${error}`));
+      await ctx.reply(`You have just delayed the parachain by 3 months.`)
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('ethjobs', async (ctx) => {
+  command = 'ethjobs'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&blockchainID=1&onlyFinalizedJobs=true`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data
+        await ctx.reply(`There have been ${result} eth jobs in the past 24 hours.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('ethlocked', async (ctx) => {
+  command = 'ethlocked'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.Blockchains[2].TokensLocked24H
+        await ctx.reply(`There has been ${result} ethTRAC locked into jobs in the past 24 hours.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('ethnodes', async (ctx) => {
+  command = 'ethnodes'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.Blockchains[2].ActiveNodes
+        await ctx.reply(`There are ${result} active eth nodes(identities) on the ODN.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('ethpayouts', async (ctx) => {
+  command = 'ethpayouts'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.Blockchains[2].TokensPaidout24H
+        await ctx.reply(`There has been ${result} ethTRAC paidout in the last 24 hours.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('ethstaked', async (ctx) => {
+  command = 'ethstaked'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.Blockchains[2].StakedTokens
+        await ctx.reply(`There is ${result} ethTRAC staked on the ODN.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('gnosisjobs', async (ctx) => {
+  command = 'gnosisjobs'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&blockchainID=2&onlyFinalizedJobs=true`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data
+        await ctx.reply(`There have been ${result} gnosis jobs in the past 24 hours.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('gnosislocked', async (ctx) => {
+  command = 'gnosislocked'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.Blockchains[1].TokensLocked24H
+        await ctx.reply(`There has been ${result} gnoTRAC locked into jobs in the past 24 hours.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('gnosisnodes', async (ctx) => {
+  command = 'gnosisnodes'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.Blockchains[1].ActiveNodes
+        await ctx.reply(`There are ${result} active gnosis nodes(identities) on the ODN.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('gnosispayouts', async (ctx) => {
+  command = 'gnosispayouts'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.Blockchains[1].TokensPaidout24H
+        await ctx.reply(`There has been ${result} gnoTRAC paidout in the last 24 hours.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('gnosisstaked', async (ctx) => {
+  command = 'gnosisstaked'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.Blockchains[1].StakedTokens
+        await ctx.reply(`There is ${result} gnoTRAC staked on the ODN.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('jobs', async (ctx) => {
+  command = 'jobs'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&onlyFinalizedJobs=true`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data
+        await ctx.reply(`There have been ${result} jobs in the past 24 hours.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('locked', async (ctx) => {
+  command = 'locked'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.All.TokensLocked24H
+        await ctx.reply(`There has been ${result} TRAC locked into jobs in the past 24 hours.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('nodes', async (ctx) => {
+  command = 'nodes'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.All.ActiveNodes
+        await ctx.reply(`There are ${result} active nodes(identities) on the ODN.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('payouts', async (ctx) => {
+  command = 'payouts'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.All.TokensPaidout24H
+        await ctx.reply(`There has been ${result} TRAC paidout in the last 24 hours.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('polyjobs', async (ctx) => {
+  command = 'polyjobs'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `jobs/jobcreatedcountinperiod?timePeriod=hours&time=24&blockchainID=3&onlyFinalizedJobs=true`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data
+        await ctx.reply(`There have been ${result} polygon jobs in the past 24 hours.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('polylocked', async (ctx) => {
+  command = 'polylocked'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.Blockchains[0].TokensLocked24H
+        await ctx.reply(`There has been ${result} polyTRAC locked into jobs in the past 24 hours.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('polynodes', async (ctx) => {
+  command = 'polynodes'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.Blockchains[0].ActiveNodes
+        await ctx.reply(`There are ${result} active polygon nodes(identities) on the ODN.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('polypayouts', async (ctx) => {
+  command = 'polypayouts'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.Blockchains[0].TokensPaidout24H
+        await ctx.reply(`There has been ${result} polyTRAC paidout in the last 24 hours.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('polystaked', async (ctx) => {
+  command = 'polystaked'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.Blockchains[0].StakedTokens
+        await ctx.reply(`There is ${result} polyTRAC staked on the ODN.`)
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+    }
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('profit', async (ctx) => {
+  command = 'profit'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  permission = await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    return permission;
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+
+  if(permission == `allow`){
+    profit_stmnt = await profit(ctx);
+    await ctx.reply(profit_stmnt)
   }
+  await ctx.deleteMessage();
+});
 
-  cron.schedule('0 20 * * *', async (ctx) => {
-    try{
-      console.log('Posting ODN stat updates');
-
-      var date = new Date().toISOString().slice(0, 10)
-
-      var trac_usd_price = await module.exports.trac_usd_price();
-      var trac_usd_price = Number(trac_usd_price);
-      var trac_usd_price = trac_usd_price.toFixed(2);
-
-
-
-      var dir = "/root/odn_stats"
-      if(fs.existsSync(dir)){
-        console.log('Stats folder exists')
-
-        var payout_ath = 'sudo cat /root/odn_stats/payout_stats.txt'
-        var payout_ath = await exec(payout_ath)
-        var payout_ath = payout_ath.stdout
-
-        var prev_ethjobs = 'sudo cat /root/odn_stats/ethjob_stats.txt'
-        var prev_ethjobs = await exec(prev_ethjobs)
-        var prev_ethjobs = prev_ethjobs.stdout
-
-        var prev_xdaijobs = 'sudo cat /root/odn_stats/xdaijob_stats.txt'
-        var prev_xdaijobs = await exec(prev_xdaijobs)
-        var prev_xdaijobs = prev_xdaijobs.stdout
-
-        var prev_polyjobs = 'sudo cat /root/odn_stats/polyjob_stats.txt'
-        var prev_polyjobs = await exec(prev_polyjobs)
-        var prev_polyjobs = prev_polyjobs.stdout
-
-        var prev_ethnodes = 'sudo cat /root/odn_stats/ethnode_stats.txt'
-        var prev_ethnodes = await exec(prev_ethnodes)
-        var prev_ethnodes = prev_ethnodes.stdout
-
-        var prev_xdainodes = 'sudo cat /root/odn_stats/xdainode_stats.txt'
-        var prev_xdainodes = await exec(prev_xdainodes)
-        var prev_xdainodes = prev_xdainodes.stdout
-
-        var prev_polynodes = 'sudo cat /root/odn_stats/polynode_stats.txt'
-        var prev_polynodes = await exec(prev_polynodes)
-        var prev_polynodes = prev_polynodes.stdout
-      }else{
-        var mk_stats_fldr = 'sudo mkdir /root/odn_stats'
-        await exec(mk_stats_fldr)
-        var payout_stats = 'sudo touch /root/odn_stats/payout_stats.txt'
-        await exec(payout_stats)
-        var ethjob_stats = 'sudo touch /root/odn_stats/ethjob_stats.txt'
-        await exec(ethjob_stats)
-        var xdaijob_stats = 'sudo touch /root/odn_stats/xdaijob_stats.txt'
-        await exec(xdaijob_stats)
-        var polyjob_stats = 'sudo touch /root/odn_stats/polyjob_stats.txt'
-        await exec(polyjob_stats)
-        var ethnode_stats = 'sudo touch /root/odn_stats/ethnode_stats.txt'
-        await exec(ethnode_stats)
-        var xdainode_stats = 'sudo touch /root/odn_stats/xdainode_stats.txt'
-        await exec(xdainode_stats)
-        var polynode_stats = 'sudo touch /root/odn_stats/polynode_stats.txt'
-        await exec(polynode_stats)
-
-        var payout_ath = 0
-        var prev_ethjobs = 0
-        var prev_xdaijobs = 0
-        var prev_polyjobs = 0
-        var prev_ethnodes = 0
-        var prev_xdainodes = 0
-        var prev_polynodes = 0
-      }
-
-      var payouts = await module.exports.payouts();
-      var payouts = Number(payouts);
-      var payouts = payouts.toFixed(2);
-
-      if(payouts > payout_ath){
-        var payout_stats = 'sudo rm -rf /root/odn_stats/payout_stats.txt'
-        await exec(payout_stats)
-
-        await fs.writeFile('/root/odn_stats/payout_stats.txt', payouts, err => {
-          if (err) {
-            console.error(err)
-            return
-          }
-          //file written successfully
-        })
-      }
-
-      var ethjobs = await module.exports.ethjobs();
-      var ethjobs = Number(ethjobs);
-      var prev_ethjobs = Number(prev_ethjobs);
-      var ethjob_chng = ethjobs - prev_ethjobs
-
-      if(ethjobs < prev_ethjobs){
-        var eth_sym = ''
-      }else{
-        var eth_sym = '+'
-      }
-
-      if(ethjob_chng == 0){
-        var ethjob_chng = '0.00'
-      }else{
-        var ethjob_chng = ethjob_chng / ethjobs
-        var ethjob_chng = ethjob_chng * 100
-        var ethjob_chng = ethjob_chng.toFixed(2);
-      }
-
-      await fs.writeFile('/root/odn_stats/ethjob_stats.txt', ethjobs, err => {
-        if (err) {
-          console.error(err)
-          return
-        }
-        //file written successfully
+bot.command('staked', async (ctx) => {
+  command = 'staked'
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    if(permission == `allow`){
+      query = queryTypes.queryOTHUB()
+      ext = `home/HomeV3`
+      await query
+      .getData(ext)
+      .then(async ({ result }) => {
+        result = result.data.All.StakedTokens
+        result = result.toFixed(2)
+        await ctx.reply(`There is ${result} TRAC staked on the ODN.`)
       })
-
-      var xdaijobs = await module.exports.xdaijobs();
-      var xdaijobs = Number(xdaijobs);
-      var prev_xdaijobs = Number(prev_xdaijobs);
-      var xdaijob_chng = xdaijobs - prev_xdaijobs
-
-      if(xdaijobs < prev_xdaijobs){
-        var xdai_sym = ''
-      }else{
-        var xdai_sym = '+'
-      }
-
-      if(xdaijob_chng == 0){
-        var xdaijob_chng = '0.00'
-      }else{
-        var xdaijob_chng = xdaijob_chng / xdaijobs
-        var xdaijob_chng = xdaijob_chng * 100
-        var xdaijob_chng = xdaijob_chng.toFixed(2);
-      }
-
-      await fs.writeFile('/root/odn_stats/xdaijob_stats.txt', xdaijobs, err => {
-        if (err) {
-          console.error(err)
-          return
-        }
-        //file written successfully
-      })
-
-      var polyjobs = await module.exports.polyjobs();
-      var polyjobs = Number(polyjobs);
-      var prev_polyjobs = Number(prev_polyjobs);
-      var polyjob_chng = polyjobs - prev_polyjobs
-
-      if(polyjobs < prev_polyjobs){
-        var poly_sym = ''
-      }else{
-        var poly_sym = '+'
-      }
-
-      if(polyjob_chng == 0){
-        var polyjob_chng = '0.00'
-      }else{
-        var polyjob_chng = polyjob_chng / polyjobs
-        var polyjob_chng = polyjob_chng * 100
-        var polyjob_chng = polyjob_chng.toFixed(2);
-      }
-
-      await fs.writeFile('/root/odn_stats/polyjob_stats.txt', polyjobs, err => {
-        if (err) {
-          console.error(err)
-          return
-        }
-        //file written successfully
-      })
-
-      var ethnodes = await module.exports.ethnodes();
-      var ethnodes = Number(ethnodes);
-      var prev_ethnodes = Number(prev_ethnodes);
-      var ethnodes_chng = ethnodes - prev_ethnodes
-
-      if(ethnodes < prev_ethnodes){
-        var ethn_sym = ''
-      }else{
-        var ethn_sym = '+'
-      }
-
-      var ethnodes_chng = ethnodes_chng / ethnodes
-      var ethnodes_chng = ethnodes_chng * 100
-      var ethnodes_chng = ethnodes_chng.toFixed(2);
-
-      await fs.writeFile('/root/odn_stats/ethnode_stats.txt', ethnodes, err => {
-        if (err) {
-          console.error(err)
-          return
-        }
-        //file written successfully
-      })
-
-      var xdainodes = await module.exports.xdainodes();
-      var xdainodes = Number(xdainodes);
-      var prev_xdainodes = Number(prev_xdainodes);
-      var xdainodes_chng = xdainodes - prev_xdainodes
-
-      if(xdainodes < prev_xdainodes){
-        var xdain_sym = ''
-      }else{
-        var xdain_sym = '+'
-      }
-
-      var xdainodes_chng = xdainodes_chng / xdainodes
-      var xdainodes_chng = xdainodes_chng * 100
-      var xdainodes_chng = xdainodes_chng.toFixed(2);
-
-      await fs.writeFile('/root/odn_stats/xdainode_stats.txt', xdainodes, err => {
-        if (err) {
-          console.error(err)
-          return
-        }
-        //file written successfully
-      })
-
-      var polynodes = await module.exports.polynodes();
-      var polynodes = Number(polynodes);
-      //var prev_polynodes = Number(prev_polynodes);
-      var polynodes_chng = polynodes - prev_polynodes
-
-      if(polynodes < prev_polynodes){
-        var polyn_sym = ''
-      }else{
-        var polyn_sym = '+'
-      }
-
-      var polynodes_chng = polynodes_chng / polynodes
-      var polynodes_chng = polynodes_chng * 100
-      var polynodes_chng = polynodes_chng.toFixed(2);
-
-      await fs.writeFile('/root/odn_stats/polynode_stats.txt', polynodes, err => {
-        if (err) {
-          console.error(err)
-          return
-        }
-        //file written successfully
-      })
-
-      var usdpayouts = payouts * trac_usd_price
-      var usdpayouts = Number(usdpayouts);
-      var usdpayouts = usdpayouts.toFixed(2);
-
-      var usdpayouts_ath = payout_ath * trac_usd_price
-      var usdpayouts_ath = Number(usdpayouts_ath);
-      var usdpayouts_ath = usdpayouts_ath.toFixed(2);
-
-      await bot.telegram.sendMessage('-543322141',
-        date+' - Knowledge Graph Daily Stats:'+os.EOL+os.EOL+
-        'ATH:   '+payout_ath+' TRAC ($'+usdpayouts_ath+' USD) paid out!'+os.EOL+
-        'Today: '+payouts+' TRAC ($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
-        'Jobs by Network:'+os.EOL+
-        'Ethereum: '+ethjobs+' ('+eth_sym+ethjob_chng+'%)'+os.EOL+
-        'xDai: '+xdaijobs+' ('+xdai_sym+xdaijob_chng+'%)'+os.EOL+
-        'Polygon: '+polyjobs+' ('+poly_sym+polyjob_chng+'%)'+os.EOL+os.EOL+
-        'Active Nodes(IDs) by Network:'+os.EOL+
-        'Ethereum: '+ethnodes+' ('+ethn_sym+ethnodes_chng+'%)'+os.EOL+
-        'xDai: '+xdainodes+' ('+xdain_sym+xdainodes_chng+'%)'+os.EOL+
-        'Polygon: '+polynodes+' ('+polyn_sym+polynodes_chng+'%)'
-      )
-
-      await bot.telegram.sendMessage('-1001399729852',
-        date+' - Knowledge Graph Daily Stats:'+os.EOL+os.EOL+
-        'ATH:   '+payout_ath+' TRAC ($'+usdpayouts_ath+' USD) paid out!'+os.EOL+
-        'Today: '+payouts+' TRAC ($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
-        'Jobs by Network:'+os.EOL+
-        'Ethereum: '+ethjobs+' ('+eth_sym+ethjob_chng+'%)'+os.EOL+
-        'xDai: '+xdaijobs+' ('+xdai_sym+xdaijob_chng+'%)'+os.EOL+
-        'Polygon: '+polyjobs+' ('+poly_sym+polyjob_chng+'%)'+os.EOL+os.EOL+
-        'Active Nodes(IDs) by Network:'+os.EOL+
-        'Ethereum: '+ethnodes+' ('+ethn_sym+ethnodes_chng+'%)'+os.EOL+
-        'xDai: '+xdainodes+' ('+xdain_sym+xdainodes_chng+'%)'+os.EOL+
-        'Polygon: '+polynodes+' ('+polyn_sym+polynodes_chng+'%)'
-      )
-
-      await bot.telegram.sendMessage('-1001384216088',
-        date+' - Knowledge Graph Daily Stats:'+os.EOL+os.EOL+
-        'ATH:   '+payout_ath+' TRAC ($'+usdpayouts_ath+' USD) paid out!'+os.EOL+
-        'Today: '+payouts+' TRAC ($'+usdpayouts+' USD) paid out!'+os.EOL+os.EOL+
-        'Jobs by Network:'+os.EOL+
-        'Ethereum: '+ethjobs+' ('+eth_sym+ethjob_chng+'%)'+os.EOL+
-        'xDai: '+xdaijobs+' ('+xdai_sym+xdaijob_chng+'%)'+os.EOL+
-        'Polygon: '+polyjobs+' ('+poly_sym+polyjob_chng+'%)'+os.EOL+os.EOL+
-        'Active Nodes(IDs) by Network:'+os.EOL+
-        'Ethereum: '+ethnodes+' ('+ethn_sym+ethnodes_chng+'%)'+os.EOL+
-        'xDai: '+xdainodes+' ('+xdain_sym+xdainodes_chng+'%)'+os.EOL+
-        'Polygon: '+polynodes+' ('+polyn_sym+polynodes_chng+'%)'
-      )
-      console.log('Done posting stats.')
-    }catch(e){
-      console.log(e);
+      .catch((error) => console.log(`Error : ${error}`));
     }
-  });
-
-  bot.command('bothelp', async (ctx) => {
-    try{
-      await ctx.deleteMessage()
-      return ctx.reply(
-        'b-OT Commands(3min cooldown):'+os.EOL+
-        '/createprofile - DM ME!'+os.EOL+
-        '/myprofile'+os.EOL+
-        '/nodehelp'+os.EOL+
-        '/profit'+os.EOL+
-        '/backup'+os.EOL+
-        '/freespace'+os.EOL+
-        '/dockerless'+os.EOL+
-        '/overlay'+os.EOL+
-        '/pruning'+os.EOL+
-        '/jobs'+os.EOL+
-        '/activejobs'+os.EOL+
-        '/nodes'+os.EOL+
-        '/staked'+os.EOL+
-        '/locked'+os.EOL+
-        '/payouts'
-      )
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I dont feel so good...')
-    }
-  });
-
-  bot.command('nodehelp', async (ctx) => {
-    try{
-      await ctx.deleteMessage()
-      return ctx.reply(
-        'OT-Hub: https://othub.origin-trail.network/dashboard'+os.EOL+
-        'Discord Support: https://discord.gg/QCb3hqa4'+os.EOL+
-        'Start A New Node: otnode.com'+os.EOL+
-        'Support Email: tech@origin-trail.com'
-      )
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I dont feel so good...')
-    }
-  });
-
-  bot.command('backup', async (ctx) => {
-    try{
-      await ctx.deleteMessage()
-      return ctx.reply(
-        'Please visit this link to see how to back your node up: https://www.otnode.com/maintenance/node-backup'+os.EOL+
-        'Thanks Millian and contributors!'
-      )
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I dont feel so good...')
-    }
-  });
-
-  bot.command('freespace', async (ctx) => {
-    try{
-      await ctx.deleteMessage()
-      return ctx.reply(
-        'Please visit this link to see how to potentially clear up space on your node: https://www.otnode.com/maintenance/node-space-management'+os.EOL+
-        'You can also try running the below commands to free space.'+os.EOL+
-        'wget https://raw.githubusercontent.com/calr0x/OT-Settings/main/space-maker.sh'+os.EOL+
-        'chmod +x space-maker.sh'+os.EOL+
-        './space-maker.sh'+os.EOL+
-        'Thanks Satan!'
-      )
-    }catch(e){
-      console.log(e)
-      ctx.reply('I dont feel so good...')
-    }
-  });
-
-  bot.command('dockerless', async (ctx) => {
-    try{
-      await ctx.deleteMessage()
-      return ctx.reply(
-        'Sometimes running your node in docker has its draw backs. Below is a community developed way of running without docker.'+os.EOL+
-        'github.com/calr0x/OT-DockSucker'+os.EOL+
-        'Thanks Calvin!'
-      )
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I dont feel so good...')
-    }
-  });
-
-  bot.command('overlay', async (ctx) => {
-    try{
-      await ctx.deleteMessage()
-      return ctx.reply(
-        'The Cosmic Overlay is a gui/interface built for docker nodes. You can find it here: https://github.com/CosmiCloud/Cosmic_OverlayV2'
-      )
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I dont feel so good...')
-    }
-  });
-
-  bot.command('pruning', async (ctx) => {
-    try{
-      await ctx.deleteMessage()
-      return ctx.reply(
-        'If you would like to easily add data pruning to your node config, you can run the following command on your server:'+os.EOL+
-        'wget https://raw.githubusercontent.com/calr0x/OT-Settings/main/data/add-pruning.sh && chmod +x add-pruning.sh && ./add-pruning.sh'
-      )
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I dont feel so good...')
-    }
-  });
-  //---------------------------------END HELP COMMANDS--------------------------
-
-  //----------------START MY NODE COMMANDS--------------------------------------
-  bot.command('/createprofile', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-      console.log(ctx.message.chat)
-          if(ctx.message.chat.type == 'private'){
-          await db.exec("INSERT INTO user_header VALUES ('"+ctx.message.from.id+"','"+ctx.message.from.username+"',NULL,NULL,NULL,NULL)", async function(err, row){
-            if(err){
-              console.log(err)
-              await ctx.reply("@"+ctx.message.from.username+", You already have a profile.")
-
-            }else{
-              await db.get("SELECT chat_id, user_name FROM user_header WHERE chat_id ="+ctx.message.from.id, async function(err, row) {
-                if(err){
-
-                  await ctx.reply("Weird, I wasnt able to find your profile.")
-                }else{
-
-                  await ctx.reply("@"+ctx.message.from.username+", I have created a profile for "+ctx.message.from.username+" - "+ctx.message.from.id+". You can add nodes to your profile with /addnodeid")
-                }
-              });
-            }
-          });
-
-          await db.close();
-        }else{
-          await ctx.reply("@"+ctx.message.from.username+", I only like to do profile stuff in private ;). DM me to create a profile and add node ids.")
-          await ctx.deleteMessage()
-        }
-    }catch(e){
-      console.log(e)
-      return ctx.reply('Failed to create profile')
-    }
-
-  });
-
-  bot.command('/deleteprofile', async (ctx) => {
-    try{
-      if(ctx.message.chat.type == 'private'){
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.exec("DELETE FROM user_header WHERE chat_id ='"+ctx.message.from.id+"'");
-      await db.exec("DELETE FROM node_header WHERE chat_id ='"+ctx.message.from.id+"'");
-
-      await db.close();
-
-      await ctx.reply("@"+ctx.message.from.username+", I have deleted your profile.")
-    }else{
-      await ctx.deleteMessage()
-    }
-    }catch(e){
-      console.log(e)
-      return ctx.reply('@'+ctx.message.from.username+', I wasnt able to delete your profile.')
-    }
-  });
-
-  bot.command('/myprofile', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT uh.chat_id, uh.user_name, uh.last_profile_req_date, nh.node_id FROM user_header uh INNER JOIN node_header nh ON nh.chat_id = uh.chat_id WHERE uh.chat_id ='"+ctx.message.from.id+"' LIMIT 50", async function(err, row) {
-        if(row != ''){
-          if(row[0].last_profile_req_date){
-            var date1 = new Date(row[0].last_profile_req_date);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          return ctx.reply('@'+ctx.message.from.username+', Please create a profile by DMing me /createprofile')
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min){
-            var total_jobs = 0
-            var active_jobs = 0
-            var staked_tokens = 0
-            var locked_tokens = 0
-            var paidout_tokens = 0
-            var total_litigations = 0
-
-            for(var i = 0; i < (row.length); i++) {
-              var node_id = row[i].node_id
-              var dh_info = "sudo curl -s https://v5api.othub.info/api/nodes/DataHolder/"+node_id
-              var dh_info = await exec(dh_info);
-              var dh_info = JSON.parse(dh_info.stdout);
-
-              var total_jobs = total_jobs + parseInt(dh_info.TotalWonOffers);
-              var active_jobs = active_jobs + parseInt(dh_info.TotalActiveOffers);
-              var staked_tokens = staked_tokens + parseInt(dh_info.StakeTokens);
-              var locked_tokens =  locked_tokens + parseInt(dh_info.StakeReservedTokens);
-              var paidout_tokens =  paidout_tokens + parseInt(dh_info.PaidTokens);
-              var total_litigations = total_litigations + parseInt(dh_info.LitigationCount);
-            }
-
-            await ctx.replyWithMarkdownV2(
-            '@'+ctx.message.from.username+os.EOL+
-            '*Node Count:* '+row.length+os.EOL+
-            '*Total Jobs:* '+total_jobs+os.EOL+
-            '*Active Jobs:* '+active_jobs+os.EOL+
-            '*Staked Tokens:* '+staked_tokens+os.EOL+
-            '*Locked Tokens:* '+locked_tokens+os.EOL+
-            '*Paidout Tokens:* '+paidout_tokens+os.EOL+
-            '*Total Litigations:* '+total_litigations
-            )
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("UPDATE user_header set last_profile_req_date ='"+time_stamp+"'", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else{
-            if(ctx.message.chat.type =='private'){
-              var remaining = three_min - diffTime
-              var remaining = remaining / 1000 / 60
-              var remaining = parseInt(remaining);
-
-              await ctx.reply("@"+ctx.message.from.username+", You need to wait another "+remaining+" minutes before asking for your profile.")
-            }else{
-              var remaining = three_min - diffTime
-              console.log(remaining)
-              await ctx.deleteMessage()
-            }
-          }
-
-      });
-      await db.close();
-
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to pull your profile.')
-    }
-  });
-
-  bot.command('/mynodeids', async (ctx) => {
-    try{
-      if(ctx.message.chat.type == 'private'){
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT node_id FROM node_header WHERE chat_id ='"+ctx.message.from.id+"'", async function(err, row) {
-          if(err){
-            console.log(err)
-            console.log('Error checking to see if nodes exists.')
-          }else{
-            if(row !=""){
-              console.log('Nodes Exists')
-              var node_list = ""
-              for(var i = 0; i < (row.length); i++) {
-                var node_id = row[i].node_id
-                var node_list = node_list+row[i].node_id+' '
-                console.log(node_list)
-              }
-              await ctx.reply(
-              "@"+ctx.message.from.username+", I have the following nodes on record for your profile: "+os.EOL+
-              node_list)
-            }else{
-              return ctx.reply('@'+ctx.message.from.username+', I dont have any nodes on record for you. Please add some with /addnodeid')
-            }
-          }
-
-      });
-      await db.close();
-
-    }else{
-      await ctx.deleteMessage()
-    }
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to find your node ID.')
-    }
-  });
-
-  bot.command('/addnodeid', async (ctx) => {
-    try{
-      if(ctx.message.chat.type == 'private'){
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-      if(!ctx.session.step) ctx.session = {}
-      ctx.session.step = 'node_id'
-      await db.get("SELECT user_name FROM user_header WHERE chat_id ='"+ctx.message.from.id+"'", async function(err, row) {
-        if(err){
-          console.log(err)
-          console.log('Error checking to see if user exists.')
-        }else{
-          if(row){
-            console.log('User Exists.')
-            return ctx.reply('@'+row.user_name+', What node ID would you like to add to your profile?')
-          }else{
-            return ctx.reply('@'+row.user_name+', I need to create a profile for you first. Please create one with /createprofile')
-          }
-        }
-      });
-      await db.close();
-    }else{
-      await ctx.deleteMessage()
-    }
-    }catch(e){
-      console.log(e)
-      return ctx.reply('Im not accepting any new IDs right now.')
-    }
-  });
-
-
-  //-----------------END MY NODE COMMANDS---------------------------------------
-  bot.command('profit', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'profit'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 1*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-            var messy = ctx.message.text
-            var messy = messy.replace('/profit', '')
-
-            if (messy == ''){
-              var custom = 'no'
-              var staked_trac = 3500
-              var vps_cost_usd = 10
-            }else{
-              var custom = 'yes'
-              var messy = messy.trim();
-
-              var staked_trac = messy.substr(0,messy.indexOf(' '));
-              if(isNaN(staked_trac) == true || staked_trac <= 3000 || staked_trac > 100000){
-                try{
-                  await ctx.reply('Please provide only staked amount and vps cost in that order separated by a space. Staked trac must be between 3000 and 100000.')
-                  await ctx.deleteMessage()
-                  return;
-                }catch(e){
-                  console.log('didnt delete message probs not admin')
-                }
-                return;
-              }
-
-              var vps_cost_usd = messy.substr(messy.indexOf(' ')+1);
-              if(isNaN(vps_cost_usd) == true || vps_cost_usd > 100000){
-                try{
-                  await ctx.reply('Please provide only staked amount and vps cost in that order separated by a space. VPS cost cannot exceed 100000.')
-                  await ctx.deleteMessage()
-                  return;
-                }catch(e){
-                  console.log('didnt delete message probs not admin')
-                }
-                return;
-              }
-            }
-
-              var jobs24h = await module.exports.jobs();
-              var jobs24h = jobs24h * 3
-
-              var nodes = await module.exports.xdainodes();
-  				    var nodes = nodes.slice(0,-1);
-              var nodes = Number(nodes);
-
-              var jobs_per_node = jobs24h / nodes
-
-              var avg_reward = await module.exports.avg_reward();
-              var avg_reward = Number(avg_reward);
-
-              var trac_usd_price = await module.exports.trac_usd_price();
-              var trac_usd_price = Number(trac_usd_price);
-
-              var avg_monthly_reward = jobs_per_node * 30 * avg_reward
-              var avg_usd_reward =  avg_monthly_reward * trac_usd_price
-              var usd_after_vps = avg_usd_reward - vps_cost_usd
-
-              var usd_staked = staked_trac * trac_usd_price
-              var apy = usd_after_vps * 12 / usd_staked
-              var apy = apy.toFixed(3);
-              var apy = apy * 100
-
-              if(custom == 'no'){
-                await ctx.reply("The current profitability of staking on the ODN is "+apy+"% APY assuming you are staking 3500 trac and are paying $10/month for your vps. This number can be inaccurate based on job holding time and how many jobs there have been in the past week.");
-              }else{
-                await ctx.reply("The current profitability of staking on the ODN is "+apy+"% APY assuming you are staking "+staked_trac+" trac and are paying $"+vps_cost_usd+"/month for your vps. This number can be inaccurate based on job holding time and how many jobs there have been in the past week.");
-              }
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('profit','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-
-            try{
-              await ctx.deleteMessage()
-            }catch(e){
-              console.log('didnt delete message probs not admin')
-            }
-
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            try{
-              await ctx.deleteMessage()
-            }catch(e){
-              console.log('didnt delete message probs not admin')
-            }
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  //---------------------------------START JOB COMMANDS-------------------------
-  //active jobs
-  bot.command('activejobs', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'activejobs'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const jobs = await module.exports.activejobs();
-      			const tjobs = jobs.slice(0,-1);
-      			await ctx.reply('There are '+tjobs+' active jobs.')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('activejobs','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  //all jobs in last 24h
-  bot.command('jobs', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'jobs'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const jobs = await module.exports.jobs();
-				await ctx.reply('There have been '+jobs+' jobs in the past 24 hours.')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('jobs','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  //all eth jobs in last 24h
-  bot.command('ethjobs', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'ethjobs'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const jobs = await module.exports.ethjobs();
-				await ctx.reply('There have been '+jobs+' ethereum jobs in the past 24 hours.')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('ethjobs','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  //all xdai jobs in last 24h
-  bot.command('xdaijobs', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'xdaijobs'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const jobs = await module.exports.xdaijobs();
-				await ctx.reply('There have been '+jobs+' xdai jobs in the past 24 hours.')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('xdaijobs','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  //all  polygon jobs in last 24h
-  bot.command('polyjobs', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'polyjobs'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const jobs = await module.exports.polyjobs();
-				await ctx.reply('There have been '+jobs+' polygon jobs in the past 24 hours.')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('polyjobs','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  bot.command('dotjobs', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'dotjobs'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			return ctx.reply('You have just delayed the Polkadot integration by 3 weeks.')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('dotjobs','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-  //---------------------------------END JOB COMMANDS-------------------------
-
-  //---------------------------------START NODES COMMANDS---------------------
-  bot.command('nodes', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'nodes'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const nodes = await module.exports.nodes();
-				  const tnodes = nodes.slice(0,-1);
-				  await ctx.reply('There are '+tnodes+' active nodes(identities) on the ODN. ')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('nodes','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  bot.command('ethnodes', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'ethnodes'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const nodes = await module.exports.ethnodes();
-				  const tnodes = nodes.slice(0,-1);
-				  await ctx.reply('There are '+tnodes+' active eth nodes(identities) on the ODN. ')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('ethnodes','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  bot.command('xdainodes', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'xdainodes'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const nodes = await module.exports.xdainodes();
-				  const tnodes = nodes.slice(0,-1);
-				  await ctx.reply('There are '+tnodes+' active xdai nodes(identities) on the ODN. ')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('xdainodes','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  bot.command('polynodes', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'polynodes'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const nodes = await module.exports.polynodes();
-				  const tnodes = nodes.slice(0,-1);
-				  await ctx.reply('There are '+tnodes+' active polygon nodes(identities) on the ODN. ')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('polynodes','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-  //---------------------------------END NODES COMMANDS-----------------------
-
-  //---------------------------------START PAYOUT COMMANDS--------------------
-  bot.command('payouts', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'payouts'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const payouts = await module.exports.payouts();
-				  const tpayouts = payouts.slice(0,-1);
-				  const pay_num = parseInt(tpayouts);
-				  await ctx.reply('There has been '+pay_num+' TRAC paidout in the last 24 hours. ')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('payouts','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  bot.command('ethpayouts', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'ethpayouts'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const payouts = await module.exports.ethpayouts();
-				  const tpayouts = payouts.slice(0,-1);
-				  const pay_num = parseInt(tpayouts);
-				  await ctx.reply('There has been '+pay_num+' ethTRAC paidout in the last 24 hours. ')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('ethpayouts','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  bot.command('xdaipayouts', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'xdaipayouts'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const payouts = await module.exports.xdaipayouts();
-				  const tpayouts = payouts.slice(0,-1);
-				  const pay_num = parseInt(tpayouts);
-				  await ctx.reply('There has been '+pay_num+' xTRAC paidout in the last 24 hours. ')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('xdaipayouts','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  bot.command('polypayouts', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'polypayouts'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const payouts = await module.exports.polypayouts();
-				  const tpayouts = payouts.slice(0,-1);
-				  const pay_num = parseInt(tpayouts);
-				  await ctx.reply('There has been '+pay_num+' polyTRAC paidout in the last 24 hours. ')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('polypayouts','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-  //---------------------------------END PAYOUT COMMANDS----------------------
-
-  //---------------------------------START STAKED COMMANDS--------------------
-  bot.command('staked', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'staked'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const staked = await module.exports.staked();
-				  const tstaked = staked.slice(0,-1);
-				  const staked_num = parseInt(tstaked);
-				  await ctx.reply('There is '+staked_num+' TRAC staked on the ODN. ')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('staked','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  bot.command('ethstaked', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'ethstaked'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const staked = await module.exports.ethstaked();
-				  const tstaked = staked.slice(0,-1);
-				  const staked_num = parseInt(tstaked);
-				  await ctx.reply('There is '+staked_num+' ethTRAC staked on the ODN. ')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('ethstaked','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  bot.command('xdaistaked', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'xdaistaked'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const staked = await module.exports.xdaistaked();
-				  const tstaked = staked.slice(0,-1);
-				  const staked_num = parseInt(tstaked);
-				  await ctx.reply('There is '+staked_num+' xTRAC staked on the ODN. ')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('xdaistaked','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  bot.command('polystaked', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'polystaked'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const staked = await module.exports.polystaked();
-				  const tstaked = staked.slice(0,-1);
-				  const staked_num = parseInt(tstaked);
-				  await ctx.reply('There is '+staked_num+' polyTRAC staked on the ODN. ')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('polystaked','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-  //---------------------------------END STAKED COMMANDS----------------------
-
-  //---------------------------------START LOCKED COMMANDS--------------------
-  bot.command('locked', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'locked'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const locked = await module.exports.locked();
-				  const tlocked = locked.slice(0,-1);
-				  const locked_num = parseInt(tlocked);
-				  await ctx.reply('There has been '+locked_num+' TRAC locked into jobs in the past 24 hours.')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('locked','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  bot.command('ethlocked', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'ethlocked'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const locked = await module.exports.ethlocked();
-				  const tlocked = locked.slice(0,-1);
-				  const locked_num = parseInt(tlocked);
-				  await ctx.reply('There has been '+locked_num+' ethTRAC locked into jobs in the past 24 hours.')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('ethlocked','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  bot.command('xdailocked', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'xdailocked'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const locked = await module.exports.xdailocked();
-				  const tlocked = locked.slice(0,-1);
-				  const locked_num = parseInt(tlocked);
-				  await ctx.reply('There has been '+locked_num+' xTRAC locked into jobs in the past 24 hours.')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('xdailocked','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-
-  bot.command('polylocked', async (ctx) => {
-    try{
-      const db = new sqlite3.Database(__dirname+'/bot.db');
-
-      await db.all("SELECT date_last_used FROM command_history WHERE command = 'polylocked'", async function(err, row) {
-        if(row != ''){
-          if(row[0].date_last_used){
-            var date1 = new Date(row[0].date_last_used);
-            var date2 = new Date();
-          }else{
-            var date1 = 1
-            var date2 = 99999999999999999999
-          }
-        }else{
-          var date1 = 1
-          var date2 = 99999999999999999999
-        }
-
-          var diffTime = Math.abs(date2 - date1);
-          var date1 = Math.abs(date1);
-          var three_min = 3*60*1000
-          if(diffTime > three_min && ctx.message.chat.type != 'private'){
-      			//put command code here
-      			const locked = await module.exports.polylocked();
-				  const tlocked = locked.slice(0,-1);
-				  const locked_num = parseInt(tlocked);
-				  await ctx.reply('There has been '+locked_num+' polyTRAC locked into jobs in the past 24 hours.')
-
-            var time_stamp = new Date();
-            const db = new sqlite3.Database(__dirname+'/bot.db');
-            await db.exec("REPLACE INTO command_history VALUES ('polylocked','"+time_stamp+"')", async function(err, row){
-              if(err){
-                console.log(err)
-              }else{
-                console.log('insert timestamp into db')
-              }
-            });
-            await db.close();
-            await ctx.deleteMessage()
-          }else if(ctx.message.chat.type == 'private'){
-			      await ctx.reply("@"+ctx.message.from.username+", This is a public command only.")
-          }else{
-            var remaining = three_min - diffTime
-            console.log(remaining+' remaining')
-            await ctx.deleteMessage()
-          }
-      });
-      await db.close();
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I wasnt able to run that command.')
-    }
-  });
-  //---------------------------------END LOCKED COMMANDS----------------------
-
-  //---------------------------------START EASTER EGGS------------------------
-  bot.command('watsurid', ctx => {
-    try{
-      ctx.reply(
-        'What is your node ID?'
-      )
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I dont feel so good...')
-    }
-  });
-
-  bot.command('npmrunsetup', ctx => {
-    try{
-      ctx.reply(
-        'Erasing system.db...'
-      )
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I dont feel so good...')
-    }
-  });
-
-  bot.command('doiknowu', ctx => {
-    try{
-      ctx.reply(
-        'Unknown Command'
-      )
-    }catch(e){
-      console.log(e)
-      return ctx.reply('I dont feel so good...')
-    }
-  });
-
-  bot.on('text', async (ctx) => {
-    try{
-      if(ctx.message.chat.type = 'private'){
-        switch(ctx.session.step){
-              case 'node_id':
-                try{
-                  ctx.session.node_id = ctx.message.text
-                  var dh_info = "sudo curl -s https://v5api.othub.info/api/nodes/DataHolder/"+ctx.session.node_id
-                  var dh_info = await exec(dh_info);
-
-                  if(dh_info.stdout){
-                    console.log(ctx.message)
-                    console.log(ctx.session.node_id)
-                    const db = new sqlite3.Database(__dirname+'/bot.db');
-
-                    await db.exec("INSERT INTO node_header VALUES ('"+ctx.message.from.id+"','"+ctx.session.node_id+"')");
-
-                    await db.all("SELECT chat_id, node_id FROM node_header WHERE chat_id ='"+ctx.message.from.id+"'", async function(err, row) {
-                      var row_count = row.length
-                      await ctx.reply(
-                        "@"+ctx.message.from.username+", I have added node "+ctx.session.node_id+" to your profile. You can run /myprofile to get your stats!")
-                    });
-
-                    console.log ('4')
-                    await db.close();
-                  }else{
-                    await ctx.reply(
-                      "@"+ctx.message.from.username+", that is not a valid node id.")
-                  }
-
-                }catch(e){
-                  console.log(e)
-                }
-            break
-              default:
-                return //ctx.reply('Unknown command')
-            }
-
-            ctx.session.step = undefined
-            console.log(ctx.session.step)
-      }else{
-
-      }
-
-    }catch(e){
-      console.log(e)
-    }
-  });
-
-  bot.launch();
-
-  // Enable graceful stop
-  process.once('SIGINT', () => bot.stop('SIGINT'));
-  process.once('SIGTERM', () => bot.stop('SIGTERM'));
-
-}catch(e){
-  console.log(e)
-  console.log('BLAHRG')
-}
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  await ctx.deleteMessage();
+});
+
+bot.command('tip', async (ctx) => {
+  tip_stmnt = await tip(ctx);
+  if(tip_stmnt){
+    await ctx.reply(tip_stmnt);
+  }
+  await ctx.deleteMessage();
+});
+
+// bot.command('tst', async (ctx) => {
+//   postStats = await dailyStats();
+//   chat_ids = JSON.parse(process.env.CHAT_IDS_FOR_DAILY)
+//   for(i = 0; i < chat_ids.length ; i++){
+//     await bot.telegram.sendMessage(chat_ids[i],postStats);
+//   }
+//
+//   await ctx.deleteMessage();
+// });
+
+//-----------------------------------AUTOMATED REPLYS-----------------------
+cron.schedule('0 20 * * *', async (ctx) => {
+  postStats = await dailyStats();
+  chat_ids = JSON.parse(process.env.CHAT_IDS_FOR_DAILY)
+  for(i = 0; i < chat_ids.length ; i++){
+    await bot.telegram.sendMessage(chat_ids[i],postStats);
+  }
+});
+
+//------------------------------------PROFILES--------------------------
+
+bot.command('myprofile', async (ctx) => {
+  command = ' '
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  permission = await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    return permission;
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  if(permission != `block`){
+    profile_response = await profile(`profile`,ctx);
+    await ctx.replyWithMarkdownV2(profile_response);
+  }
+  await ctx.deleteMessage();
+});
+
+bot.command('createprofile', async (ctx) => {
+  profile_response = await profile(`create`,ctx);
+  await ctx.replyWithMarkdownV2(profile_response);
+
+  await ctx.deleteMessage();
+});
+
+// bot.command('deleteprofile', async (ctx) => {
+//   profile_response = await profile(`delete`,ctx);
+//   await ctx.replyWithMarkdownV2(profile_response);
+//
+//   await ctx.deleteMessage();
+// });
+
+bot.command('mynodeids', async (ctx) => {
+  command = ' '
+  query = ' '
+  querySQL = await queryTypes.querySQL();
+  permission = await querySQL
+  .getData(query, command)
+  .then(async ({ query_result, permission }) => {
+    console.log(`Query Result: ${query_result} Permission: ${permission}`);
+    return permission;
+  })
+  .catch((error) => console.log(`Error : ${error}`));
+  if(permission != `block`){
+    profile_response = await profile(`nodeids`,ctx);
+    await ctx.replyWithMarkdownV2(profile_response);
+  }
+  await ctx.deleteMessage();
+});
+
+bot.command('addnodeid', async (ctx) => {
+  profile_response = await profile(`add`,ctx);
+  await ctx.replyWithMarkdownV2(profile_response);
+
+  await ctx.deleteMessage();
+});
+
+// bot.on('text', async (ctx) => {
+//   profile_response = await profile(`nodeid_resp`,ctx);
+//   await ctx.replyWithMarkdownV2(profile_response);
+//
+//   //await ctx.deleteMessage();
+// });
+
+
+bot.launch();
+
+// Enable graceful stop
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
