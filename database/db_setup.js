@@ -44,7 +44,7 @@ const command_list = [//alphabetical
 async function build_db(){
       try {
         await db.exec("CREATE TABLE IF NOT EXISTS node_header (chat_id VARCHAR NOT NULL, node_id VARCHAR NOT NULL)");
-        await db.exec("CREATE TABLE IF NOT EXISTS user_header (chat_id VARCHAR PRIMARY KEY NOT NULL, user_name VARCHAR, tip_address VARCHAR, tip_address_key VARCHAR, sign_txn VARCHAR, sign_data VARCHAR, last_tip_date DATE)");
+        await db.exec("CREATE TABLE IF NOT EXISTS user_header (chat_id VARCHAR PRIMARY KEY NOT NULL, user_name VARCHAR, tip_address VARCHAR, tip_address_key VARCHAR, last_tip_date DATE)");
         await db.exec("CREATE TABLE IF NOT EXISTS command_history (command VARCHAR PRIMARY KEY NOT NULL, date_last_used DATE)");
         await db.exec("CREATE TABLE IF NOT EXISTS stats_history ( ath VARCHAR NOT NULL, eth_jobs VARCHAR NOT NULL, gnosis_jobs VARCHAR NOT NULL, poly_jobs VARCHAR NOT NULL, eth_nodes VARCHAR NOT NULL, gnosis_nodes VARCHAR NOT NULL, poly_nodes VARCHAR NOT NULL)");
         await db.exec(`INSERT INTO stats_history VALUES ("0","0","0","0","0","0","0")`);

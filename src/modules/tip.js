@@ -233,9 +233,11 @@ module.exports = tip = async (ctx) => {
         "nonce":web3.utils.toHex(nonce)
       }
 
-      transaction = new Tx(rawTransaction, {common : common}) //, {common : common}=
+      //transaction = new Tx(rawTransaction, {common : common}) //, {common : common}=
+      transaction = new Tx(rawTransaction, {common : common})
       transaction.sign(privateKey);
-      await web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'));
+      serializedtxn = transaction.serialize();
+      await web3.eth.sendSignedTransaction('0x' +serializedtxn.toString('hex'));
 
       return `@${sender_info[0].user_name}, Sent a tip to ${reciever_info[0].user_name} transaction has is: `;//${receipt.transactionHash}`;
     }else{

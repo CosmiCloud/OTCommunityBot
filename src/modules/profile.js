@@ -192,7 +192,7 @@ module.exports = profile = async (type, ctx) => {
           const account = await web3.eth.accounts.create();
           console.log(account);
           command = ' ' //create_profile in db
-          query = `INSERT INTO user_header VALUES ('${ctx.message.from.id}','${ctx.message.from.username}','${account.address}','${account.privateKey}','${account.signTransaction}','${account.sign}','1')`
+          query = `INSERT INTO user_header VALUES ('${ctx.message.from.id}','${ctx.message.from.username}','${account.address}','${account.privateKey}','1')`
           await querySQL
           .getData(query, command)
           .then(async ({query_result, permission}) => {
