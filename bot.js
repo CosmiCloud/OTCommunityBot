@@ -740,7 +740,7 @@ bot.command('tip', async (ctx) => {
   if(tip_stmnt){
     await ctx.reply(tip_stmnt);
   }
-  await ctx.deleteMessage();
+  //await ctx.deleteMessage();
 });
 
 // bot.command('tst', async (ctx) => {

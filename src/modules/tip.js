@@ -8,48 +8,9 @@ const Common = require('ethereumjs-common').default;
 const Web3 = require('web3');
 const web3 =  new Web3(Web3.givenProvider || new Web3.providers.HttpProvider(rpc_endpoint));
 const contract_addr = process.env.TIPPING_CONTRACT_ADDR
-const customChainParams = { name: 'PolygonMumbai', chainId: 80001, networkId: 80001 }
-const common = new Common.forCustomChain('goerli',customChainParams,'istanbul');
-const minABI = [
-  // balanceOf
-  {
-    "constant":true,
-    "inputs":[{"name":"_owner","type":"address"}],
-    "name":"balanceOf",
-    "outputs":[{"name":"balance","type":"uint256"}],
-    "type":"function"
-  },
-  // decimals
-  {
-    "constant":true,
-    "inputs":[],
-    "name":"decimals",
-    "outputs":[{"name":"","type":"uint8"}],
-    "type":"function"
-  },
-  //transfer
-  {
-    'constant': false,
-    'inputs': [
-      {
-        'name': '_to',
-        'type': 'address'
-      },
-      {
-        'name': '_value',
-        'type': 'uint256'
-      }
-    ],
-    'name': 'transfer',
-    'outputs': [
-      {
-        'name': '',
-        'type': 'bool'
-      }
-    ],
-    'type': 'function'
-  }
-];
+//const customChainParams = { name: 'polygon-mumbai', chainId: 80001, networkId: 80001 }
+//const common = new Common.forCustomChain('mainnet',{name: 'PolygonMainnet',chainId: 137, networkId: 137 }, 'petersburg');
+const minABI = require("../abi/abi");
 
 module.exports = tip = async (ctx) => {
   const queryOTHUB = queryTypes.queryOTHUB();
@@ -126,7 +87,7 @@ module.exports = tip = async (ctx) => {
     }
 
     command = ' ' //profile check -- no cooldown
-    query = `SELECT chat_id, user_name, tip_address, tip_address_key, sign_txn, sign_data, last_tip_date FROM user_header WHERE chat_id =${ctx.message.from.id}`
+    query = `SELECT chat_id, user_name, tip_address, tip_address_key, last_tip_date FROM user_header WHERE chat_id =${ctx.message.from.id}`
     sender_info = await querySQL
     .getData(query, command)
     .then(async ({query_result, permission}) => {
@@ -197,30 +158,29 @@ module.exports = tip = async (ctx) => {
 
       console.log(`SENDER GAS: ${gas_balance}`)
       console.log(`SENDER TRAC BALANCE: ${sender_trac_balance}`)
+      limit = Number(.001)
       if(sender_trac_balance > amount){
-        if(gas_balance < .001){
+        if(gas_balance < limit){
           return '@'+sender_info[0].user_name+', You do not have enough to pay for gas: '+gas_balance+' You must have at least .001';
         }
       }else{
-        return `@${sender_info[0].user_name}, Your TRAC balance ${sender_trac_balance} is too low to send ${amount}`;
+        return `@${sender_info[0].user_name}, Your TRAC balance ${sender_trac_balance} is too low to send ${amounty}`;
       }
 
       //get nonce
-      nonce = web3.eth.getTransactionCount(senderAddress) + 1;
-
+      nonce = web3.eth.getTransactionCount(senderAddress);
+      nonce = nonce +1
       //set amount
-      amount = Number(amount);
-      amount = amount.toString(16);
-      amount = web3.utils.toHex(amount);
+      amount = web3.utils.toWei(amount.toString(), 'ether')
+      amount = web3.utils.toBN(amount)
+      console.log(`BN: `+amount)
 
       //privateKey
       privateKey = sender_info[0].tip_address_key;
-      privateKey = privateKey.replace('0x', '')
+      //privateKey = privateKey.replace('0x', '')
       privateKey = Buffer.from(privateKey, 'hex')
 
-      //send txn
       console.log(`SENDER: ${senderAddress}`)
-      console.log(`PRIVATE KEY: ${privateKey}`);
       console.log(`RECIEVER: ${recieverAddress}`)
 
       const rawTransaction = {
@@ -228,15 +188,18 @@ module.exports = tip = async (ctx) => {
         "gasPrice":web3.utils.toHex(2 * 1e9),
         "gasLimit":web3.utils.toHex(50000),
         "to":contract_addr,
-        "value":"0x0",
+        "value":amount,
+        "type": web3.utils.toHex(0),
         "data":contract.methods.transfer(recieverAddress, amount).encodeABI(),
-        "nonce":web3.utils.toHex(nonce)
+        "nonce":nonce
       }
-
+      console.log(`here`)
       //transaction = new Tx(rawTransaction, {common : common}) //, {common : common}=
-      transaction = new Tx(rawTransaction, {common : common})
-      transaction.sign(privateKey);
-      serializedtxn = transaction.serialize();
+      transaction = new Tx(rawTransaction, {chainId: 137})
+      console.log(`here1`)
+      await transaction.sign(privateKey);
+      serializedtxn = await transaction.serialize();
+      console.log(serializedtxn)
       await web3.eth.sendSignedTransaction('0x' +serializedtxn.toString('hex'));
 
       return `@${sender_info[0].user_name}, Sent a tip to ${reciever_info[0].user_name} transaction has is: `;//${receipt.transactionHash}`;
