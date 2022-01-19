@@ -5,6 +5,7 @@
   "main": "bot.js",
   "dependencies": {
     "axios": "^0.24.0",
+    "better-sqlite3": "^7.4.6",
     "date-and-time": "^2.0.0",
     "dotenv": "^10.0.0",
     "ethereumjs-tx": "^2.1.2",

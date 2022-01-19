@@ -15,19 +15,21 @@ bot.use(session({ ttl: 10 }))
 //-------------------------------------NO API REQUIRED - AlPHABETICAL --------------------------------------------
 bot.command('backup', async (ctx) => {
   command = 'backup'
-  query = ' '
-  querySQL = await queryTypes.querySQL();
-  await querySQL
-  .getData(query, command)
-  .then(async ({ query_result, permission }) => {
-    console.log(`Query Result: ${query_result} Permission: ${permission}`);
-    if(permission == `allow`){
-      return ctx.reply(
-        `Please visit this link to see how to back your node up: https://www.otnode.com/maintenance/node-backup`
-      )
-    }
+  spamCheck = await queryTypes.spamCheck();
+  permission = await spamCheck
+  .getData(command)
+  .then(async ({ permission }) => {
+    return permission;
   })
   .catch((error) => console.log(`Error : ${error}`));
+
+  if(permission == `allow`){
+    await ctx.deleteMessage();
+    return ctx.reply(
+      `Please visit this link to see how to back your node up: https://www.otnode.com/maintenance/node-backup`
+    )
+  }
+
   await ctx.deleteMessage();
 });
 
@@ -736,29 +738,30 @@ bot.command('staked', async (ctx) => {
 });
 
 bot.command('tip', async (ctx) => {
-  tip_stmnt = await tip(ctx);
-  if(tip_stmnt){
-    await ctx.reply(tip_stmnt);
-  }
-  //await ctx.deleteMessage();
+  // tip_stmnt = await tip(ctx);
+  // if(tip_stmnt){
+  //   await ctx.reply(tip_stmnt);
+  // }
+  await ctx.deleteMessage();
 });
 
-// bot.command('tst', async (ctx) => {
-//   postStats = await dailyStats();
-//   chat_ids = JSON.parse(process.env.CHAT_IDS_FOR_DAILY)
-//   for(i = 0; i < chat_ids.length ; i++){
-//     await bot.telegram.sendMessage(chat_ids[i],postStats);
-//   }
-//
-//   await ctx.deleteMessage();
-// });
+bot.command('tst', async (ctx) => {
+  stats = await dailyStats();
+  // chat_ids = JSON.parse(process.env.CHAT_IDS_FOR_DAILY)
+  // for(i = 0; i < chat_ids.length ; i++){
+  //   await bot.telegram.sendMessage(chat_ids[i],stats);
+  // }
+
+  await ctx.reply(stats);
+  await ctx.deleteMessage();
+});
 
 //-----------------------------------AUTOMATED REPLYS-----------------------
 cron.schedule('0 20 * * *', async (ctx) => {
-  postStats = await dailyStats();
+  stats = await dailyStats();
   chat_ids = JSON.parse(process.env.CHAT_IDS_FOR_DAILY)
   for(i = 0; i < chat_ids.length ; i++){
-    await bot.telegram.sendMessage(chat_ids[i],postStats);
+    await bot.telegram.sendMessage(chat_ids[i],stats);
   }
 });
 

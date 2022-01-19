@@ -1,10 +1,10 @@
 const getOTHUB = require("../queries/queryOTHUB");
-const getSQL = require("../queries/querySQL");
+const spamCheck = require("../queries/spamCheck");
 
 const queryTypes = [
   {
-    name: "sqlite",
-    getData: () => getSQL(query, command)
+    name: "spamCheck",
+    getData: () => spamCheck(command)
   },
   {
     name: "othub",
@@ -13,7 +13,7 @@ const queryTypes = [
 ];
 
 module.exports = {
-  querySQL: function querySQL() {
+  spamCheck: function spamCheck() {
     return queryTypes[0];
   },
   queryOTHUB: function queryOTHUB() {

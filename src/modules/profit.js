@@ -1,10 +1,8 @@
 const fs = require("fs");
 const queryTypes = require("../util/queryTypes");
-const queryAPI = require("../util/queryAPI");
+const queryOTHUB = queryTypes.queryOTHUB();
 
 module.exports = profit = async (ctx) => {
-  const queryOTHUB = queryTypes.queryOTHUB();
-  const querySQL = queryTypes.querySQL();
   date = new Date().toISOString().slice(0, 10)
 
   messy = ctx.message.text
@@ -20,26 +18,12 @@ module.exports = profit = async (ctx) => {
 
     staked_trac = messy.substr(0,messy.indexOf(' '));
     if(isNaN(staked_trac) == true || staked_trac <= 3000 || staked_trac > 100000){
-      try{
-        await ctx.reply('Please provide only staked amount and vps cost in that order separated by a space. Staked trac must be between 3000 and 100000.')
-        await ctx.deleteMessage()
-        return;
-      }catch(e){
-        console.log('didnt delete message probs not admin')
-      }
-      return;
+      return 'Please provide only staked amount and vps cost in that order separated by a space. Staked trac must be between 3000 and 100000.'
     }
 
     vps_cost_usd = messy.substr(messy.indexOf(' ')+1);
     if(isNaN(vps_cost_usd) == true || vps_cost_usd > 100000){
-      try{
-        await ctx.reply('Please provide only staked amount and vps cost in that order separated by a space. VPS cost cannot exceed 100000.')
-        await ctx.deleteMessage()
-        return;
-      }catch(e){
-        console.log('didnt delete message probs not admin')
-      }
-      return;
+      return 'Please provide only staked amount and vps cost in that order separated by a space. Staked trac must be between 3000 and 100000.'
     }
   }
 

@@ -1,11 +1,11 @@
 const fs = require("fs");
 const queryTypes = require("../util/queryTypes");
-const queryAPI = require("../util/queryAPI");
+const queryOTHUB = queryTypes.queryOTHUB();
+const spamCheck = queryTypes.spamCheck();
+const db = require('better-sqlite3')(`${__dirname}/../../database/bot.db`,{ verbose: console.log });
 
 module.exports = dailyStats = async () => {
   console.log('Posting ODN stat updates');
-  const queryOTHUB = queryTypes.queryOTHUB();
-  const querySQL = queryTypes.querySQL();
   date = new Date().toISOString().slice(0, 10)
 
   //get trac usd
@@ -19,16 +19,7 @@ module.exports = dailyStats = async () => {
     .catch((error) => console.log(`Error : ${error}`));
 
   //get historical stats
-  command = ' '
-  query = `SELECT * FROM stats_history`
-  historical_stats = await querySQL
-  .getData(query, command)
-  .then(async ({query_result, permission}) => {
-    return query_result;
-  })
-  .catch((error) => console.log(`Error : ${error}`));
-  len = historical_stats.length
-  historical_stats = historical_stats[len -1];
+  historical_stats = await db.prepare('SELECT * FROM stats_history').get();
 
   ath = historical_stats.ath
   historical_eth_jobs = historical_stats.eth_jobs
@@ -38,9 +29,6 @@ module.exports = dailyStats = async () => {
   historical_gnosis_nodes = historical_stats.gnosis_nodes
   historical_poly_nodes = historical_stats.poly_nodes
 
-  console.log(trac_usd);
-  console.log(historical_stats);
-
   //query othub api to get payouts
   ext = `home/HomeV3`
   payouts = await queryOTHUB
@@ -49,7 +37,6 @@ module.exports = dailyStats = async () => {
     return result.data.All.TokensPaidout24H;
    })
    .catch((error) => console.log(`Error : ${error}`));
-  console.log(`ath: ${ath} | todays payouts: ${payouts.toFixed(2)}`)
   payouts = payouts.toFixed(2)
 
   //set ath to be inserted later
@@ -193,14 +180,15 @@ module.exports = dailyStats = async () => {
   usdpayouts_ath = usdpayouts_ath.toFixed(2);
 
   //insert new data stats history
-  command = ' '
-  query = `REPLACE INTO stats_history VALUES ("${ath}","${eth_jobs}","${gnosis_jobs}","${poly_jobs}","${eth_nodes}","${gnosis_nodes}","${poly_nodes}")`
-  await querySQL
-  .getData(query, command)
-  .then(async ({result}) => {
-    return result;
-  })
-  .catch((error) => console.log(`Error : ${error}`));
+  await db.prepare('REPLACE INTO stats_history VALUES (?,?,?,?,?,?,?)').run(ath, eth_jobs, gnosis_jobs, poly_jobs, eth_nodes, gnosis_nodes, poly_nodes);
+  // command = ' '
+  // query = `REPLACE INTO stats_history VALUES ("${ath}","${eth_jobs}","${gnosis_jobs}","${poly_jobs}","${eth_nodes}","${gnosis_nodes}","${poly_nodes}")`
+  // await querySQL
+  // .getData(query, command)
+  // .then(async ({result}) => {
+  //   return result;
+  // })
+  // .catch((error) => console.log(`Error : ${error}`));
 
   return `
   ${date} - Knowledge Graph Daily Stats:

@@ -1,34 +1,27 @@
 require('dotenv').config();
 const fs = require("fs");
 const queryTypes = require("../util/queryTypes");
-const queryAPI = require("../util/queryAPI");
-const rpc_endpoint = process.env.TIPPING_ENDPOINT
-const Tx = require('ethereumjs-tx').Transaction;
-const Common = require('ethereumjs-common').default;
-const Web3 = require('web3');
-const web3 =  new Web3(Web3.givenProvider || new Web3.providers.HttpProvider(rpc_endpoint));
-const contract_addr = process.env.TIPPING_CONTRACT_ADDR
-const common = new Common.forCustomChain('mainnet',{name: 'polygon-mainnet',chainId: 137, networkId: 137 }, 'petersburg');
-const minABI = require("../abi/abi");
+const queryOTHUB = queryTypes.queryOTHUB();
+// const rpc_endpoint = process.env.TIPPING_ENDPOINT
+// const Tx = require('ethereumjs-tx').Transaction;
+// const Common = require('ethereumjs-common').default;
+// const Web3 = require('web3');
+// const web3 =  new Web3(Web3.givenProvider || new Web3.providers.HttpProvider(rpc_endpoint));
+// const contract_addr = process.env.TIPPING_CONTRACT_ADDR
+// const common = new Common.forCustomChain('mainnet',{name: 'polygon-mainnet',chainId: 137, networkId: 137 }, 'petersburg');
+// const minABI = require("../abi/abi");
 
 module.exports = tip = async (ctx) => {
   const queryOTHUB = queryTypes.queryOTHUB();
-  const querySQL = queryTypes.querySQL();
 
-  spam_check = `SELECT last_tip_date FROM user_header WHERE chat_id = ${ctx.message.from.id}`
-  const spam_result = await queryDB(spam_check); //query results for checkspam
-
-  console.log(spam_result)
-  expireDate = new Date(spam_result[0].last_tip_date);
+  spam_result = await db.prepare('SELECT last_tip_date FROM user_header WHERE chat_id =?').get(ctx.message.from.id);
+  expireDate = new Date(spam_result.last_tip_date);
   currentDate = new Date();
 
   timeDif = Math.abs(currentDate - expireDate);
   expireDate = Math.abs(expireDate);
   //cooldown = 3*60*1000
   cooldown = 1
-
-  console.log(timeDif)
-  console.log(expireDate)
 
   if(timeDif > cooldown){
     permission = `allow`
@@ -51,38 +44,39 @@ module.exports = tip = async (ctx) => {
 
     if (messy == ''){//no params rovided
       return `@${ctx.message.from.username}, you must provide a tip amount (1 trac max) and a recipient`;
-    }else{
-      custom = 'yes'
-      messy = messy.trim();
+    }
 
-      amount = messy.substr(0,messy.indexOf(' '));
-      console.log(`AMOUNT: ${amount}`)
-      if(amount > 1){
-        return `@${ctx.message.from.username}, you must provide a valid number less than or equal 1`;
-      }
+    custom = 'yes'
+    messy = messy.trim();
 
-      reciever_name = messy.substr(messy.indexOf(' ')+2);
-      reciever_name = reciever_name.trim();
-      console.log(`RECEIVER NAME: ${reciever_name}`)
-      if(reciever_name){
-        command = ' ' //profile check -- no cooldown
-        query = `SELECT chat_id, user_name, tip_address FROM user_header WHERE user_name ='${reciever_name}'`
-        reciever_info = await querySQL
-        .getData(query, command)
-        .then(async ({query_result, permission}) => {
-          return query_result;
-        })
-        .catch((error) => console.log(`Error : ${error}`));
+    amount = messy.substr(0,messy.indexOf(' '));
+    console.log(`AMOUNT: ${amount}`)
 
-        console.log(reciever_info);
-        if(reciever_info){
-          //
-        }else{
-          return `@${ctx.message.from.username}, the recipient does not have a profile created`;
-        }
+    if(amount > 1){
+      return `@${ctx.message.from.username}, you must provide a valid number less than or equal 1`;
+    }
+
+    reciever_name = messy.substr(messy.indexOf(' ')+2);
+    reciever_name = reciever_name.trim();
+    console.log(`RECEIVER NAME: ${reciever_name}`)
+    if(reciever_name){
+      command = ' ' //profile check -- no cooldown
+      query = `SELECT chat_id, user_name, tip_address FROM user_header WHERE user_name ='${reciever_name}'`
+      reciever_info = await querySQL
+      .getData(query, command)
+      .then(async ({query_result, permission}) => {
+        return query_result;
+      })
+      .catch((error) => console.log(`Error : ${error}`));
+
+      console.log(reciever_info);
+      if(reciever_info){
+        //
       }else{
-        return `@${ctx.message.from.username}, you must provide a recipient`;
+        return `@${ctx.message.from.username}, the recipient does not have a profile created`;
       }
+    }else{
+      return `@${ctx.message.from.username}, you must provide a recipient`;
     }
 
     command = ' ' //profile check -- no cooldown
